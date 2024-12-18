@@ -1,0 +1,14 @@
+{
+  "files.associations": {
+    "ah_config.h": "c",
+    "ut_kafka.h": "c",
+    "nw_evt.h": "c",
+    "error.h": "c",
+    "nw_svr.h": "c",
+    "nw_ses.h": "c",
+    "nw_clt.h": "c",
+    "stdio.h": "c",
+    "nw_sock.h": "c",
+    "ev.h": "c"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "C Development Container",
+  "build": {
+      "dockerfile": "Dockerfile",
+      "context": ".."
+  },
+  "workspaceFolder": "/workspace",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.cpptools",
+        "ms-vscode.cmake-tools",
+        "twxs.cmake",
+        "jebbs.plantuml"
+      ],
+      "settings": {
+        "terminal.integrated.shell.linux": "/bin/bash",
+        "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"
+      }
+    }
+  },
+  "forwardPorts": [],
+  "postCreateCommand": "gcc --version",
+  "remoteUser": "root"
+}
