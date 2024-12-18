@@ -9,6 +9,8 @@
     "nw_clt.h": "c",
     "stdio.h": "c",
     "nw_sock.h": "c",
-    "ev.h": "c"
+    "ev.h": "c",
+    "*.inc": "makefile",
+    "Makefile": "makefile"
   }
 }
