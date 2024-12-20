@@ -35,13 +35,17 @@ int process_exist(const char *fmt, ...)
     char name[PATH_MAX];
 	va_list ap;
     va_start(ap, fmt);
-    vsnprintf(name, sizeof(name), fmt, ap);
+    if (vsnprintf(name, sizeof(name), fmt, ap) >= sizeof(name)) {
+        return -1; // Name too long
+    }
     va_end(ap);
 
     char path[PATH_MAX];
-    snprintf(path, sizeof(path), "/tmp/%s.lock", name);
+    if (snprintf(path, sizeof(path), "/tmp/%s.lock", name) >= sizeof(path)) {
+        return -1;  // Path too long
+    }
 
-    int fd = open(path, O_CREAT, 400);
+    int fd = open(path, O_CREAT, 0400);
     if (fd < 0)
         return -1;
     if (flock(fd, LOCK_EX | LOCK_NB) < 0)
