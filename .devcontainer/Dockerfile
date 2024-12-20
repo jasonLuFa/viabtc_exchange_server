@@ -27,6 +27,8 @@ RUN apt-get update && apt-get install -y \
     libhttp-parser-dev \
     libcurl4-openssl-dev \
     libmpdec-dev \
+    # Redis
+    libhiredis-dev \
     # Kafka related
     librdkafka-dev \
     # Zookeeper
