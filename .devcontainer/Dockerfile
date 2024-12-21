@@ -27,6 +27,13 @@ RUN apt-get update && apt-get install -y \
     libhttp-parser-dev \
     libcurl4-openssl-dev \
     libmpdec-dev \
+    # Additional required dependencies
+    liblz4-dev \
+    libsqlite3-dev \
+    libpq-dev \
+    libldap2-dev \
+    libdb-dev \
+    libsasl2-dev \
     # Redis
     libhiredis-dev \
     # Kafka related
