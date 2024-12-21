@@ -1,9 +1,7 @@
 {
-  "name": "C Development Container",
-  "build": {
-      "dockerfile": "Dockerfile",
-      "context": ".."
-  },
+  "name": "ViabtcExchange Development",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "viabtc-ubuntu",
   "workspaceFolder": "/workspace",
   "customizations": {
     "vscode": {
@@ -19,7 +17,7 @@
       }
     }
   },
-  "forwardPorts": [],
+  "forwardPorts": [3306],
   "postCreateCommand": "gcc --version",
   "remoteUser": "root"
 }

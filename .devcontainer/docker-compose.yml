@@ -1,0 +1,25 @@
+services:
+  viabtc-ubuntu:
+    build: .
+    container_name: viabtc-ubuntu-container
+    image: viabtc-ubuntu-image
+    volumes:
+      - ..:/workspace:cached
+    command: sleep infinity
+    network_mode: host
+
+  mysql:
+    image: mysql:latest
+    restart: always
+    container_name: viabtc-mysql-container
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: trade_history
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ../sql:/docker-entrypoint-initdb.d
+
+volumes:
+  mysql_data:
