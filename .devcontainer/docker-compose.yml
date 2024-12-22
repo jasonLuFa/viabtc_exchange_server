@@ -5,10 +5,16 @@ services:
     image: viabtc-ubuntu-image
     volumes:
       - ..:/workspace:cached
-    command: sleep infinity
+    command: >
+      bash -c "
+        mkdir -p /workspace/readhistory/log/trade &&
+        mkdir -p /workspace/matchengine/log/trade &&
+        sleep infinity"
     depends_on:
-      - mysql
-      - kafka
+      mysql:
+        condition: service_healthy
+      kafka:
+        condition: service_started
 
   mysql:
     image: mysql:latest
@@ -22,27 +28,51 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
       - ../sql:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   zookeeper:
     image: wurstmeister/zookeeper:latest
     container_name: viabtc-zookeeper
     ports:
       - "2181:2181"
+    platform: linux/amd64
 
   kafka:
     image: wurstmeister/kafka:latest
     container_name: viabtc-kafka
     ports:
       - "9092:9092"
+    platform: linux/amd64
     environment:
-      KAFKA_ADVERTISED_HOST_NAME: localhost
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_CREATE_TOPICS: "balances:1:1,orders:1:1,deals:1:1"
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      # Broker 基本配置
+      KAFKA_BROKER_ID: 1                                    # 唯一標識此 broker，單節點環境使用 1
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092            # 監聽所有網絡接口的 9092 端口
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092    # 使用服務名而不是localhost
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181              # 連接到 Zookeeper 服務，用於元數據管理
+      # Topic 配置
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"              # 允許自動創建 topic，方便開發
+      KAFKA_CREATE_TOPICS: "balances:1:1,orders:1:1,deals:1:1" # 預創建交易所需的三個核心 topic
+      KAFKA_NUM_PARTITIONS: 1                              # 單節點環境一個分區足夠
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1                  # 單節點環境一個副本足夠
+      # 消息保留配置
+      KAFKA_LOG_RETENTION_HOURS: 72                        # 消息保留 72 小時，與 matchengine 的 slice_keeptime 一致
+      # 生產者配置（matchengine 使用）
+      KAFKA_COMPRESSION_TYPE: "snappy"                     # 使用 snappy 壓縮算法，提供良好的壓縮比和性能
+      KAFKA_QUEUE_BUFFERING_MAX_MS: 1000                  # 最大消息緩衝時間 1 秒，平衡延遲和吞吐量
+      KAFKA_BATCH_NUM_MESSAGES: 10000                     # 單批次最大消息數，優化網絡傳輸效率
+      # 消費者配置
+      KAFKA_AUTO_OFFSET_RESET: "earliest"                 # 新消費者從最早的消息開始消費，確保不丟失數據
+      KAFKA_ENABLE_AUTO_COMMIT: "false"                   # 禁用自動提交 offset，由應用程序控制提交時機
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/run/docker.sock:/var/run/docker.sock        # 用於 Kafka 容器管理
+      - kafka_data:/kafka/kafka-logs                     # 持久化 Kafka 數據
     depends_on:
       - zookeeper
 
 volumes:
   mysql_data:
+  kafka_data:

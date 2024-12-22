@@ -5,6 +5,9 @@ cd .devcontainer
 echo "Stopping existing containers..."
 docker-compose down -v
 
+echo "Building containers..."
+docker-compose build --no-cache
+
 echo "Building and starting containers..."
 docker-compose up -d
 

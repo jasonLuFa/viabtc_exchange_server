@@ -15,7 +15,7 @@
 
 ### Kafka
 
-- `docker exec viabtc-kafka kafka-topics.sh --list --bootstrap-server localhost:9092`：檢查 topic 是否建立
+- `docker exec viabtc-kafka kafka-topics.sh --list --bootstrap-server localhost:9092`：列出所有topic
 
   ```
   balances
@@ -29,3 +29,5 @@
   Topic: balances	TopicId: I4PBzJfVT2qpAe25neDY6w	PartitionCount: 1	ReplicationFactor: 1	Configs: segment.bytes=1073741824
     Topic: balances	Partition: 0	Leader: 1001	Replicas: 1001	Isr: 1001
   ```
+
+- `docker exec viabtc-kafka tail -f opt/kafka/logs/server.log`： kafka 服務器日誌

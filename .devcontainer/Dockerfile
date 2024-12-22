@@ -3,12 +3,11 @@ FROM ubuntu:22.04
 # Avoid interactive prompts
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Add required repositories
-RUN apt-get update && apt-get install -y software-properties-common && \
-    apt-get update
-
-# Install all required dependencies
-RUN apt-get update && apt-get install -y \
+# Install all required dependencies in a single RUN
+RUN apt-get clean && \
+    apt-get update && \
+    apt-get install -y \
+    software-properties-common \
     build-essential \
     gcc \
     g++ \
@@ -40,6 +39,9 @@ RUN apt-get update && apt-get install -y \
     librdkafka-dev \
     # Zookeeper
     libzookeeper-mt-dev \
+    # Process management tools
+    psmisc \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory

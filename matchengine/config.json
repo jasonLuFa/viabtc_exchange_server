@@ -24,13 +24,13 @@
     },
     "cli": "tcp@127.0.0.1:7317",
     "db_log": {
-        "host": "localhost",
+        "host": "mysql",
         "user": "root",
         "pass": "root",
         "name": "trade_log"
     },
     "db_history": {
-        "host": "localhost",
+        "host": "mysql",
         "user": "root",
         "pass": "root",
         "name": "trade_history"
@@ -150,7 +150,7 @@
             "min_amount": "0.001"
         }
     ],
-    "brokers": "127.0.0.1:9092",
+    "brokers": "kafka:9092",
     "slice_interval": 3600,
-    "slice_keeptime": 259200 
+    "slice_keeptime": 259200
 }
