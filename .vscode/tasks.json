@@ -1,0 +1,26 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build-matchengine",
+            "type": "shell",
+            "command": "cd /workspace/matchengine && make CFLAGS='-g -O0'",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "build-marketprice",
+            "type": "shell",
+            "command": "cd /workspace/marketprice && make CFLAGS='-g -O0'",
+            "group": "build",
+            "problemMatcher": [
+                "$gcc"
+            ]
+        }
+    ]
+}

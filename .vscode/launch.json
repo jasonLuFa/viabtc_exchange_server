@@ -1,0 +1,47 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Matchengine",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/workspace/matchengine/matchengine",
+            "args": ["/workspace/matchengine/config.json"],
+            "stopAtEntry": false,
+            "cwd": "/workspace/matchengine",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "build-matchengine",
+            "miDebuggerPath": "/usr/bin/gdb"
+        },
+        {
+            "name": "Debug Marketprice",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/workspace/marketprice/marketprice",
+            "args": ["/workspace/marketprice/config.json"],
+            "stopAtEntry": false,
+            "cwd": "/workspace/marketprice",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "build-marketprice",
+            "miDebuggerPath": "/usr/bin/gdb"
+        }
+    ]
+}
