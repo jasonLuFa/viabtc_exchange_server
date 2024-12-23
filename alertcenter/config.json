@@ -4,7 +4,7 @@
         "core_limit": 1000000000
     },
     "log": {
-        "path": "/var/log/trade/alertcenter",
+        "path": "./log/alertcenter",
         "flag": "fatal,error,warn,info,debug"
     },
     "svr": {

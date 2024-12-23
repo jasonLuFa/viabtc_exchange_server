@@ -88,12 +88,12 @@ echo -e "\n${GREEN}Starting all services...${NC}"
 
 
 # Create necessary log directories
-mkdir -p /var/log/trade/matchengine
-mkdir -p /var/log/trade/marketprice
-mkdir -p /var/log/trade/alertcenter
-mkdir -p /var/log/trade/readhistory
-mkdir -p /var/log/trade/accessws
-mkdir -p /var/log/trade/accesshttp
+mkdir -p ./matchengine/log
+mkdir -p ./marketprice/log
+mkdir -p ./alertcenter/log
+mkdir -p ./readhistory/log
+mkdir -p ./accessws/log
+mkdir -p ./accesshttp/log
 
 # Start services in order
 for component in "${components[@]}"; do

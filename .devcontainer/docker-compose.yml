@@ -7,11 +7,7 @@ services:
       - ..:/workspace:cached
       - ./nginx/socket:/socket    # Share socket directory with nginx
     command: >
-      bash -c "
-        mkdir -p /workspace/readhistory/log/trade &&
-        mkdir -p /workspace/matchengine/log/trade &&
-        mkdir -p /workspace/marketprice/log/trade &&
-        sleep infinity"
+      bash -c "sleep infinity"
     depends_on:
       mysql:
         condition: service_healthy
@@ -27,8 +23,8 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: trade_history
-    ports:
-      - "3306:3306"
+    # ports:
+    #   - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ../sql:/docker-entrypoint-initdb.d
@@ -81,27 +77,44 @@ services:
     image: redis:latest
     container_name: redis-master
     command: redis-server --port 6379
-    ports:
-      - "6379:6379"
+    # ports:
+    #   - "6379:6379"
+    volumes:
+      - redis_data:/data
 
   redis-sentinel-1:
-    image: redis:latest
+    image: bitnami/redis-sentinel:latest
     container_name: redis-sentinel-1
-    command: redis-server --port 26381 --slaveof redis-master 6379
+    environment:
+      - REDIS_MASTER_HOST=redis-master
+      - REDIS_MASTER_PORT_NUMBER=6379
+      - REDIS_SENTINEL_PORT_NUMBER=26381
+    ports:
+      - "26381:26381"
     depends_on:
       - redis-master
 
   redis-sentinel-2:
-    image: redis:latest
+    image: bitnami/redis-sentinel:latest
     container_name: redis-sentinel-2
-    command: redis-server --port 26382 --slaveof redis-master 6379
+    environment:
+      - REDIS_MASTER_HOST=redis-master
+      - REDIS_MASTER_PORT_NUMBER=6379
+      - REDIS_SENTINEL_PORT_NUMBER=26382
+    ports:
+      - "26382:26382"
     depends_on:
       - redis-master
 
   redis-sentinel-3:
-    image: redis:latest
+    image: bitnami/redis-sentinel:latest
     container_name: redis-sentinel-3
-    command: redis-server --port 26383 --slaveof redis-master 6379
+    environment:
+      - REDIS_MASTER_HOST=redis-master
+      - REDIS_MASTER_PORT_NUMBER=6379
+      - REDIS_SENTINEL_PORT_NUMBER=26383
+    ports:
+      - "26383:26383"
     depends_on:
       - redis-master
 
@@ -119,3 +132,4 @@ services:
 volumes:
   mysql_data:
   kafka_data:
+  redis_data:
