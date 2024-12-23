@@ -4,12 +4,16 @@
   - [啟動環境](#啟動環境)
   - [檢查環境](#檢查環境)
     - [Kafka](#kafka)
+  - [檢查 ws](#檢查-ws)
 
 ## 啟動環境
+
 1. `./init_container.sh`
 2. 連到 container 中
-    - 安裝 extension [Remote - Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)，連到該 Container 直接開發
+    - 安裝 extension [Remote - Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)，連到該 Container 直接開發 ( 後續步驟都以 Remote - Containers 開發為範例 )
     - 可以使用 `docker exec -it viabtc-ubuntu-container /bin/bash` 可以進入 Container 使用 terminal
+3. 編譯 c 程式：直接在 /workspace 執行 `./compile.sh`
+4. 
 
 ## 檢查環境
 
@@ -31,3 +35,7 @@
   ```
 
 - `docker exec viabtc-kafka tail -f opt/kafka/logs/server.log`： kafka 服務器日誌
+
+## 檢查 ws
+
+- `docker exec viabtc-ubuntu-container python3 /workspace/test/accessws/ws_test.py` 

@@ -5,6 +5,7 @@ services:
     image: viabtc-ubuntu-image
     volumes:
       - ..:/workspace:cached
+      - ./nginx/socket:/socket    # Share socket directory with nginx
     command: >
       bash -c "
         mkdir -p /workspace/readhistory/log/trade &&
@@ -103,6 +104,17 @@ services:
     command: redis-server --port 26383 --slaveof redis-master 6379
     depends_on:
       - redis-master
+
+  nginx:
+    image: nginx:latest
+    container_name: viabtc-nginx
+    ports:
+      - "8091:8091"
+    volumes:
+      - ../nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/socket:/socket
+    depends_on:
+      - viabtc-ubuntu
 
 volumes:
   mysql_data:

@@ -15,13 +15,13 @@
     },
     "svr": {
         "bind": [
-            "stream@/tmp/accessws.sock"
+            "stream@/socket/accessws.sock"
         ],
         "max_pkg_size": 102400,
         "protocol": "chat"
     },
     "monitor": {
-        "bind": "tcp@0.0.0.0:8091",
+        "bind": "tcp@127.0.0.1:8092",
         "max_pkg_size": 1024
     },
     "worker_num": 1,

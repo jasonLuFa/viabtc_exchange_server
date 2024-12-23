@@ -41,8 +41,14 @@ RUN apt-get clean && \
     libzookeeper-mt-dev \
     # Process management tools
     psmisc \
+    # Python and pip for testing
+    python3 \
+    python3-pip \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+# Install Python WebSocket testing dependencies
+RUN pip3 install websockets
 
 # Set working directory
 WORKDIR /workspace
