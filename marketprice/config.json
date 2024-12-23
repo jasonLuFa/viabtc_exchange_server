@@ -35,5 +35,5 @@
             "redis-sentinel-3:26383"
         ]
     },
-    "accesshttp": "http://viabtc-ubuntu:8080"
+    "accesshttp": "http://127.0.0.1:8080"
 }
