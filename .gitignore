@@ -46,7 +46,6 @@ tags
 *.un~
 *~
 
-
 # Created by https://www.gitignore.io/api/c,vim,python,windows,visualstudio
 
 ### C ###
@@ -528,3 +527,11 @@ network/.DS_Store
 .DS_Store
 matchengine/matchengine
 marketprice/marketprice
+accesshttp/accesshttp
+accessws/accessws
+readhistory/readhistory
+alertcenter/alertcenter
+
+# Hiredis build artifacts
+depends/hiredis/hiredis-test
+depends/hiredis/hiredis.pc
