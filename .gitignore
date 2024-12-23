@@ -468,6 +468,7 @@ FakesAssemblies/
 # Node.js Tools for Visual Studio
 .ntvs_analysis.dat
 node_modules/
+build/app.js
 
 # Typescript v1 declaration files
 typings/
