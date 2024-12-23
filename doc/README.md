@@ -5,6 +5,7 @@
   - [檢查環境](#檢查環境)
     - [Kafka](#kafka)
   - [檢查 ws](#檢查-ws)
+  - [Redis](#redis)
 
 ## 啟動環境
 
@@ -39,3 +40,11 @@
 ## 檢查 ws
 
 - `docker exec viabtc-ubuntu-container python3 /workspace/test/accessws/ws_test.py` 
+
+
+## Redis 
+
+- `docker exec redis-master redis-cli ping`
+- `docker exec redis-sentinel-1 redis-cli -p 26381 info sentinel`
+- `docker exec redis-sentinel-2 redis-cli -p 26382 info sentinel`
+- `docker exec redis-sentinel-3 redis-cli -p 26383 info sentinel`
