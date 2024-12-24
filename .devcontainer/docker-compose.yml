@@ -9,12 +9,9 @@ services:
     command: >
       bash -c "sleep infinity"
     depends_on:
-      mysql:
-        condition: service_healthy
-      kafka:
-        condition: service_started
-      redis-master:
-        condition: service_started
+      - mysql
+      - kafka
+      - redis-master
 
   mysql:
     image: mysql:latest
@@ -28,11 +25,6 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
       - ../sql:/docker-entrypoint-initdb.d
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
 
   zookeeper:
     image: wurstmeister/zookeeper:latest
@@ -76,11 +68,24 @@ services:
   redis-master:
     image: redis:latest
     container_name: redis-master
-    command: redis-server --port 6379
-    # ports:
-    #   - "6379:6379"
+    command: redis-server /etc/redis/redis.conf
     volumes:
-      - redis_data:/data
+      - redis_data:/data       # Mount persistent volume
+      - ./redis/redis-master.conf:/etc/redis/redis.conf
+    ports:
+      - "6379:6379"
+
+  redis-slave:
+    image: redis:latest
+    container_name: redis-slave
+    command: redis-server /etc/redis/redis.conf
+    depends_on:
+      - redis-master
+    volumes:
+      - redis_slave_data:/data # Mount persistent volume
+      - ./redis/redis-slave.conf:/etc/redis/redis.conf
+    ports:
+      - "6380:6379"
 
   redis-sentinel-1:
     image: bitnami/redis-sentinel:latest
@@ -89,10 +94,16 @@ services:
       - REDIS_MASTER_HOST=redis-master
       - REDIS_MASTER_PORT_NUMBER=6379
       - REDIS_SENTINEL_PORT_NUMBER=26381
-    ports:
-      - "26381:26381"
+      - REDIS_MASTER_SET=mymaster
+      - REDIS_SENTINEL_QUORUM=2
+      - REDIS_SENTINEL_DOWN_AFTER_MILLISECONDS=5000
+      - REDIS_SENTINEL_FAILOVER_TIMEOUT=10000
+      - REDIS_SENTINEL_PARALLEL_SYNCS=1
     depends_on:
       - redis-master
+      - redis-slave
+    ports:
+      - "26381:26381"
 
   redis-sentinel-2:
     image: bitnami/redis-sentinel:latest
@@ -101,10 +112,16 @@ services:
       - REDIS_MASTER_HOST=redis-master
       - REDIS_MASTER_PORT_NUMBER=6379
       - REDIS_SENTINEL_PORT_NUMBER=26382
-    ports:
-      - "26382:26382"
+      - REDIS_MASTER_SET=mymaster
+      - REDIS_SENTINEL_QUORUM=2
+      - REDIS_SENTINEL_DOWN_AFTER_MILLISECONDS=5000
+      - REDIS_SENTINEL_FAILOVER_TIMEOUT=10000
+      - REDIS_SENTINEL_PARALLEL_SYNCS=1
     depends_on:
       - redis-master
+      - redis-slave
+    ports:
+      - "26382:26382"
 
   redis-sentinel-3:
     image: bitnami/redis-sentinel:latest
@@ -113,10 +130,16 @@ services:
       - REDIS_MASTER_HOST=redis-master
       - REDIS_MASTER_PORT_NUMBER=6379
       - REDIS_SENTINEL_PORT_NUMBER=26383
-    ports:
-      - "26383:26383"
+      - REDIS_MASTER_SET=mymaster
+      - REDIS_SENTINEL_QUORUM=2
+      - REDIS_SENTINEL_DOWN_AFTER_MILLISECONDS=5000
+      - REDIS_SENTINEL_FAILOVER_TIMEOUT=10000
+      - REDIS_SENTINEL_PARALLEL_SYNCS=1
     depends_on:
       - redis-master
+      - redis-slave
+    ports:
+      - "26383:26383"
 
   nginx:
     image: nginx:latest
@@ -133,3 +156,4 @@ volumes:
   mysql_data:
   kafka_data:
   redis_data:
+  redis_slave_data:

@@ -6,6 +6,11 @@
     - [Kafka](#kafka)
   - [檢查 ws](#檢查-ws)
   - [Redis](#redis)
+    - [Architecture](#architecture)
+    - [Validation Commands](#validation-commands)
+      - [1. Check Redis Master Status](#1-check-redis-master-status)
+      - [2. Check Redis Slave Status](#2-check-redis-slave-status)
+      - [3. Check Sentinel Status](#3-check-sentinel-status)
 
 ## 啟動環境
 
@@ -44,7 +49,53 @@
 
 ## Redis 
 
-- `docker exec redis-master redis-cli ping`
-- `docker exec redis-sentinel-1 redis-cli -p 26381 info sentinel`
-- `docker exec redis-sentinel-2 redis-cli -p 26382 info sentinel`
-- `docker exec redis-sentinel-3 redis-cli -p 26383 info sentinel`
+The system uses Redis in a high-availability configuration with master-slave replication and sentinel monitoring. This setup ensures data persistence and automatic failover in case of master node failure.
+
+### Architecture
+- 1 Redis master (port 6379)
+- 1 Redis slave (port 6380)
+- 3 Redis sentinels (ports 26381, 26382, 26383)
+
+### Validation Commands
+
+#### 1. Check Redis Master Status
+```bash
+# Check master replication status
+
+# Expected output should show:
+# role:master
+# connected_slaves:1
+```
+
+#### 2. Check Redis Slave Status
+```bash
+# Check slave replication status
+docker exec redis-slave redis-cli info replication
+
+# Expected output should show:
+# role:slave
+# master_host:redis-master
+# master_port:6379
+# master_link_status:up
+```
+
+#### 3. Check Sentinel Status
+```bash
+# Check sentinel status (can be run on any sentinel)
+docker exec redis-sentinel-1 redis-cli -p 26381 sentinel master mymaster
+docker exec redis-sentinel-1 redis-cli -p 26381 sentinel master mymaster
+
+# Expected output should show:
+# name: mymaster
+# ip: <redis-master-ip>
+# port: 6379
+# quorum: 2
+```
+
+- `docker exec redis-master redis-cli info replication`: Check Redis Master Status
+- `docker exec redis-slave redis-cli info replication`: Check Redis Slave Status
+- `docker exec redis-sentinel-1 redis-cli -p 26381 info sentinel`: Check Sentinel Status
+- `docker exec redis-sentinel-1 redis-cli -p 26381 sentinel master mymaster`: Check Sentinel Master Status
+- test data replication by writing to master and reading from slave
+  - `docker exec redis-master redis-cli set test_key test_value`: writing to master
+  - `docker exec redis-slave redis-cli get test_key`: reading from slave
