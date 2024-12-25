@@ -1,7 +1,7 @@
 TARGET  := marketprice
 INCS = -I ../network -I ../utils
 
-LIBS = -L ../utils -L ../network \
+LIBS = -L ../utils -L ../network -L ../depends/hiredis \
        -Wl,-Bstatic \
        -lutils -lnetwork -lev -ljansson -lmpdec \
        -lrdkafka -lz -llz4 -lssl -lcrypto \
