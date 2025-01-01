@@ -20,8 +20,8 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: trade_history
-    # ports:
-    #   - "3306:3306"
+    ports:
+      - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ../sql:/docker-entrypoint-initdb.d
@@ -63,6 +63,20 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock        # 用於 Kafka 容器管理
       - kafka_data:/kafka/kafka-logs                     # 持久化 Kafka 數據
     depends_on:
+      - zookeeper
+
+  kafka-ui:
+    container_name: kafka-ui
+    restart: always
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - 8090:8080
+    environment:
+      KAFKA_CLUSTERS_0_NAME: "Local Kafka"
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: "kafka:9092"
+      KAFKA_CLUSTERS_0_ZOOKEEPER: "zookeeper:2181"
+    depends_on:
+      - kafka
       - zookeeper
 
   redis-master:
