@@ -1,5 +1,10 @@
 {
+  "C_Cpp.intelliSenseEngine": "default",
+  "C_Cpp.default.includePath": [
+      "${workspaceFolder}/**"
+  ],
   "files.associations": {
+    "*.embeddedhtml": "html",
     "ah_config.h": "c",
     "ut_kafka.h": "c",
     "nw_evt.h": "c",
@@ -11,6 +16,7 @@
     "nw_sock.h": "c",
     "ev.h": "c",
     "*.inc": "makefile",
-    "Makefile": "makefile"
-  }
+    "Makefile": "makefile",
+    "__locale": "c"
+  },
 }
