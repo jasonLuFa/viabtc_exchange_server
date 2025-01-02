@@ -10,6 +10,9 @@
       - [Architecture](#architecture)
       - [Validation Commands](#validation-commands)
   - [簡單 UI 測試 accesshttp 的 JSON-RPC](#簡單-ui-測試-accesshttp-的-json-rpc)
+  - [不同服務介紹](#不同服務介紹)
+    - [matchengine](#matchengine)
+    - [marketprice](#marketprice)
 
 ## 啟動環境
 
@@ -81,3 +84,20 @@
 - 到 `test/frontend` 根據 README.md 安裝相關依賴
 - 在 `npm run build` 後使用 `./start.sh` 執行 http server
 - 使用 `./stop.sh` 停止 http server
+
+
+## 不同服務介紹
+
+### matchengine
+
+- 自訂 cli 顯示詞物相關資訊
+  - `nc localhost 7317` ( 7317 是 matchengine 的 cli port )
+    - `status`
+    - `balance list`
+    - `balance summary`
+    - `balance get <user_id>`
+    - `market summary`
+    - `makeslice`
+
+
+### marketprice
