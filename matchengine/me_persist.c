@@ -88,21 +88,26 @@ static int load_slice_from_db(MYSQL *conn, time_t timestamp)
 
 static int load_operlog_from_db(MYSQL *conn, time_t date, uint64_t *start_id)
 {
-    const char *table = "operlog";
+    struct tm *t = localtime(&date);
+    sds table = sdsempty();
+    table = sdscatprintf(table, "operlog_%04d%02d%02d", 1900 + t->tm_year, 1 + t->tm_mon, t->tm_mday);
     log_stderr("load oper log from: %s", table);
     if (!is_table_exists(conn, table)) {
         log_error("table %s not exist", table);
         log_stderr("table %s not exist", table);
-        return -__LINE__;
+        sdsfree(table);
+        return 0;
     }
 
     int ret = load_operlog(conn, table, start_id);
     if (ret < 0) {
         log_error("load_operlog from %s fail: %d", table, ret);
         log_stderr("load_operlog from %s fail: %d", table, ret);
+        sdsfree(table);
         return -__LINE__;
     }
 
+    sdsfree(table);
     return 0;
 }
 
@@ -369,13 +374,13 @@ cleanup:
 
 int make_slice(time_t timestamp)
 {
-    int pid = fork();
-    if (pid < 0) {
-        log_fatal("fork fail: %d", pid);
-        return -__LINE__;
-    } 
+    // int pid = fork();
+    // if (pid < 0) {
+    //     log_fatal("fork fail: %d", pid);
+    //     return -__LINE__;
+    // } 
     
-    if (pid == 0) {  // Child process
+    // if (pid == 0) {  // Child process
         int ret;
         ret = dump_to_db(timestamp);
         if (ret < 0) {
@@ -387,8 +392,8 @@ int make_slice(time_t timestamp)
             log_fatal("clear_slice fail: %d", ret);
         }
 
-        exit(0);
-    }
+        // exit(0);
+    // }
 
     // Parent process
     return 0;
