@@ -374,13 +374,13 @@ cleanup:
 
 int make_slice(time_t timestamp)
 {
-    // int pid = fork();
-    // if (pid < 0) {
-    //     log_fatal("fork fail: %d", pid);
-    //     return -__LINE__;
-    // } 
+    int pid = fork();
+    if (pid < 0) {
+        log_fatal("fork fail: %d", pid);
+        return -__LINE__;
+    } 
     
-    // if (pid == 0) {  // Child process
+    if (pid == 0) {  // Child process
         int ret;
         ret = dump_to_db(timestamp);
         if (ret < 0) {
@@ -392,8 +392,8 @@ int make_slice(time_t timestamp)
             log_fatal("clear_slice fail: %d", ret);
         }
 
-        // exit(0);
-    // }
+        exit(0);
+    }
 
     // Parent process
     return 0;
