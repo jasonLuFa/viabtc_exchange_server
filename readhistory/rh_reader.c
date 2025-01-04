@@ -42,7 +42,7 @@ json_t *get_user_balance_history(MYSQL *conn, uint32_t user_id,
     }
 
     log_trace("exec sql: %s", sql);
-    int ret = mysql_real_query(conn, sql, sdslen(sql));
+    int ret = exec_sql_with_retry(&conn, &settings.db_history, sql, 3);
     if (ret != 0) {
         log_fatal("exec sql: %s fail: %d %s", sql, mysql_errno(conn), mysql_error(conn));
         sdsfree(sql);
@@ -107,7 +107,7 @@ json_t *get_user_order_finished(MYSQL *conn, uint32_t user_id,
     }
 
     log_trace("exec sql: %s", sql);
-    int ret = mysql_real_query(conn, sql, sdslen(sql));
+    int ret = exec_sql_with_retry(&conn, &settings.db_history, sql, 3);
     if (ret != 0) {
         log_fatal("exec sql: %s fail: %d %s", sql, mysql_errno(conn), mysql_error(conn));
         sdsfree(sql);
@@ -162,7 +162,7 @@ json_t *get_order_deal_details(MYSQL *conn, uint64_t order_id, size_t offset, si
     }
 
     log_trace("exec sql: %s", sql);
-    int ret = mysql_real_query(conn, sql, sdslen(sql));
+    int ret = exec_sql_with_retry(&conn, &settings.db_history, sql, 3);
     if (ret != 0) {
         log_fatal("exec sql: %s fail: %d %s", sql, mysql_errno(conn), mysql_error(conn));
         sdsfree(sql);
@@ -208,7 +208,7 @@ json_t *get_finished_order_detail(MYSQL *conn, uint64_t order_id)
             "WHERE `id` = %"PRIu64, (uint32_t)(order_id % HISTORY_HASH_NUM), order_id);
 
     log_trace("exec sql: %s", sql);
-    int ret = mysql_real_query(conn, sql, sdslen(sql));
+    int ret = exec_sql_with_retry(&conn, &settings.db_history, sql, 3);
     if (ret != 0) {
         log_fatal("exec sql: %s fail: %d %s", sql, mysql_errno(conn), mysql_error(conn));
         sdsfree(sql);
@@ -266,7 +266,7 @@ json_t *get_market_user_deals(MYSQL *conn, uint32_t user_id, const char *market,
     }
 
     log_trace("exec sql: %s", sql);
-    int ret = mysql_real_query(conn, sql, sdslen(sql));
+    int ret = exec_sql_with_retry(&conn, &settings.db_history, sql, 3);
     if (ret != 0) {
         log_fatal("exec sql: %s fail: %d %s", sql, mysql_errno(conn), mysql_error(conn));
         sdsfree(sql);

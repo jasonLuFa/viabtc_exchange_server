@@ -11,6 +11,7 @@
 # include <mysql/errmsg.h>
 
 MYSQL *mysql_connect(mysql_cfg *cfg);
+int exec_sql_with_retry(MYSQL **conn, mysql_cfg *cfg, sds sql, int max_retries);
 bool is_table_exists(MYSQL *conn, const char *table);
 
 # endif
