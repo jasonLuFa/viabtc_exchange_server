@@ -3,7 +3,12 @@
 - [matchengine](#matchengine)
   - [服務自訂 cli 相關](#服務自訂-cli-相關)
   - [balance 和 market 相關儲存流程](#balance-和-market-相關儲存流程)
-  - [記憶體相關儲存](#記憶體相關儲存)
+  - [記憶體相關儲存重要資料結構](#記憶體相關儲存重要資料結構)
+    - [Hash Table (dict\_t)](#hash-table-dict_t)
+    - [Doubly Linked List (list\_t)](#doubly-linked-list-list_t)
+    - [搓和訂單](#搓和訂單)
+      - [搓和流程](#搓和流程)
+      - [訂單送到 kafka 流程](#訂單送到-kafka-流程)
   - [排程相關](#排程相關)
 
 ## 服務自訂 cli 相關
@@ -87,7 +92,9 @@ sequenceDiagram
     end
 ```
 
-## 記憶體相關儲存
+## 記憶體相關儲存重要資料結構
+
+### Hash Table (dict_t)
 
 - **dict_balance** ( `me_balance.c` )：記錄每個帳戶的餘額
   - Key: {user_id, type, asset}
@@ -101,12 +108,87 @@ sequenceDiagram
 - **dict_cache** ( `me_cache.c` )：RPC response cache
   - Key: cache key *string*
   - Value: cached response data
-- **dict_sql** ( `me_history.c` )：記錄每個帳戶的餘額
+- **dict_sql** ( `me_history.c` )：SQL query cache
   - Key: struct *dict_sql_key* {type, hash}
   - Value: SQL query *string*
 - **dict_update** ( `me_update.c` )：記錄近 24 hr 操作行為，避免重複操作（暫時覺得有點多餘，只在初始化和使用者於無變動時，會用到）
   - Key: {user_id, asset, business, business_id}
   - Value: struct *update_val* {create_time}
 
+### Doubly Linked List (list_t)
+
+- **list_deals**: 記錄交易紀錄
+- **list_orders**: 記錄訂單紀錄
+- **list_balances**: 記錄使用者資產
+
+### 搓和訂單
+
+- **market_t** ( `me_market.h` )：也就是訂單簿(orderbook)，以利於搓和訂單
+- market order (市價單)
+  - 市價單從不儲存在訂單簿中
+  - 它們會立即與現有的限價單進行撮合執行
+  - 如果無法完全成交，剩餘的部分將被取消
+- limit order (限價單)
+  - 當未完全成交時，會儲存在訂單簿中
+  - 按照價格和時間優先順序排序
+  - 會一直留在訂單簿中，直到以下情況發生：
+    - 被後續的訂單完全撮合成交
+    - 被用戶取消
+    - 到期（如果設定了到期時間）
+
+#### 搓和流程
+
+```mermaid
+graph TD
+  A[New Order] --> B{Order Type?}
+  B -->|Limit| C[market_put_limit_order]
+  B -->|Market| D[market_put_market_order]
+  
+  C --> E{Order Side?}
+  D --> E
+  
+  E -->|Ask/Sell| F[execute_limit_ask_order]
+  E -->|Bid/Buy| G[execute_limit_bid_order]
+  
+  F --> H[Match Against Bids]
+  G --> I[Match Against Asks]
+  
+  H --> J{Fully Filled?}
+  I --> J
+  
+  J -->|Yes| K[Order Complete]
+  J -->|No| L[Add to Orderbook]
+```
+
+#### 訂單送到 kafka 流程
+
+- list_t 
+
+```mermaid
+graph TD
+    A[Order Execution] --> B[push_order_message/push_deal_message]
+    B --> D{Is list_t empty?}
+    D -->|Yes| E[Try produce msg to kafka]
+    D -->|No| F[Add to list]
+    E -->|Success| G[Free message]
+    E -->|Queue Full| F
+    
+    H[Timer 0.1s] --> J[from memory to produce balance/order/deal message to kafka]
+```
+
 ## 排程相關
 
+- me_history.c
+  - 每 0.1 秒執行 dict_sql 儲存的 sql
+- me_main.c
+  - 每 0.5 秒將 log 從 buffer 轉存到電腦
+- me_message.c
+  - 每 0.1 秒將 list_deals, list_orders, list_balances 資料推到 kafka
+- me_operlog.c
+  - 每 0.1 秒批量更新所有操作紀錄從記憶體( list_t 為 doubly linked list )到 db
+- me_persist.c
+  - 每 1 秒檢查是否要 snapshot 記憶體 **訂單** (skiplist_t 結構), **使用者資產**(dict_balance) 資訊（更新到 `slice_order_{timestamp}`, `slice_balance_{timestamp}`, `slice_history`）
+- me_server.c
+  - 每 60 秒清空 dict_cache
+- me_update.c
+  - 每 60 秒檢查 dict_update 資料是否超過 24 hr，如果超過就刪除

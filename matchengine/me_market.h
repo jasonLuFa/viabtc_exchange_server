@@ -32,20 +32,20 @@ typedef struct order_t {
 } order_t;
 
 typedef struct market_t {
-    char            *name;
-    char            *stock;
-    char            *money;
+    char            *name;  // Market name (e.g., "BTCUSDT")
+    char            *stock; // Base asset (e.g., "BTC")
+    char            *money; // Quote asset (e.g., "USDT")
 
-    int             stock_prec;
-    int             money_prec;
-    int             fee_prec;
-    mpd_t           *min_amount;
+    int             stock_prec; // Precision for base asset amount (e.g., 8 for BTC)
+    int             money_prec; // Precision for quote asset amount (e.g., 2 for USDT)
+    int             fee_prec;   // Precision for fees calculations (e.g., 8 for 0.1%)
+    mpd_t           *min_amount; // Minimum trade amount (e.g., 0.0001 BTC)
 
-    dict_t          *orders;
-    dict_t          *users;
+    dict_t          *orders; // All orders in the market indexed by order ID
+    dict_t          *users;  // All users in the market indexed by user ID
 
-    skiplist_t      *asks;
-    skiplist_t      *bids;
+    skiplist_t      *asks;   // Sell limit orders sorted by price (ascending)
+    skiplist_t      *bids;   // Buy limit orders sorted by price (descending)
 } market_t;
 
 market_t *market_create(struct market *conf);
