@@ -8,6 +8,7 @@
     - [Doubly Linked List (list\_t)](#doubly-linked-list-list_t)
     - [搓和訂單](#搓和訂單)
       - [搓和流程](#搓和流程)
+      - [訂單送到 DB](#訂單送到-db)
       - [訂單送到 kafka 流程](#訂單送到-kafka-流程)
   - [排程相關](#排程相關)
 
@@ -160,9 +161,18 @@ graph TD
   J -->|No| L[Add to Orderbook]
 ```
 
+#### 訂單送到 DB
+
+- 存訂單資訊的 sql 會先存到 dict_sql
+- 每 0.1 秒執行 dict_sql 儲存的 sql
+- 資料表介紹
+  - deal_history: 記錄訂單級別的(order_id 索引)成交歷史
+  - user_deal_history: 記錄用戶級別(user_deal_history 的 user_id + market 索引)的成交歷史
+  - balance_history: 記錄用戶不同資產紀錄 
+
 #### 訂單送到 kafka 流程
 
-- list_t 
+- list_t 是用來暫存無法立即送到 kafka 的資料
 
 ```mermaid
 graph TD
