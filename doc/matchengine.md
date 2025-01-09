@@ -141,24 +141,46 @@ sequenceDiagram
 
 ```mermaid
 graph TD
-  A[New Order] --> B{Order Type?}
-  B -->|Limit| C[market_put_limit_order]
-  B -->|Market| D[market_put_market_order]
-  
-  C --> E{Order Side?}
-  D --> E
-  
-  E -->|Ask/Sell| F[execute_limit_ask_order]
-  E -->|Bid/Buy| G[execute_limit_bid_order]
-  
-  F --> H[Match Against Bids]
-  G --> I[Match Against Asks]
-  
-  H --> J{Fully Filled?}
-  I --> J
-  
-  J -->|Yes| K[Order Complete]
-  J -->|No| L[Add to Orderbook]
+    A[New Order] --> B{Validate Order}
+    B -->|Valid| C{Order Type}
+    B -->|Invalid| Z[Return Error]
+    
+    C -->|Market| D[market_put_market_order]
+    C -->|Limit| E[market_put_limit_order]
+    
+    subgraph "Order Matching"
+        D --> F{Side?}
+        E --> F
+        F -->|Ask| G[execute_market/limit_ask_order]
+        F -->|Bid| H[execute_market/limit_bid_order]
+        
+        G & H --> I[Match Against Orderbook]
+        I --> J[Update Balances in Memory]
+    end
+    
+    subgraph "Order Updates"
+        J --> K[Update Order Status]
+        K --> L{Is Limit Order?}
+        L -->|Yes| M{Fully Filled?}
+        L -->|No| N[Complete Order]
+        
+        M -->|Yes| N
+        M -->|No| O[Add to Orderbook]
+    end
+    
+    subgraph "Persistence & Notification"
+        N --> P1[Record History]
+        P1 -->|1| Q1[dict_sql]
+        P1 -->|2| Q2[Kafka Message]
+        
+        Q1 --> R1[deal_history]
+        Q1 --> R2[user_deal_history]
+        Q1 --> R3[balance_history]
+        
+        Q2 --> S1[deals topic]
+        Q2 --> S2[orders topic]
+        Q2 --> S3[balances topic]
+    end
 ```
 
 #### 訂單送到 DB
