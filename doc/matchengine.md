@@ -208,6 +208,27 @@ graph TD
     H[Timer 0.1s] --> J[from memory to produce balance/order/deal message to kafka]
 ```
 
+- kafka produce deal message ( consumer 在 [marketprice 處理並存到記憶體 market_info.deals](marketprice.md#緩存機制) )
+
+    ```json
+    [
+        1736492189.0142901,  // [0] 時間戳
+        "ETHBCH",            // [1] 市場名稱
+        11,                  // [2] ask order id
+        10,                  // [3] bid order id
+        2,                   // [4] ask user id
+        1,                   // [5] bid user id
+        "200.00000000",      // [6] 價格
+        "1.00000000",        // [7] 數量
+        "0.4",               // [8] ask fee (賣方手續費)
+        "0.001",             // [9] bid fee (買方手續費)
+        1,                   // [10] side (1: sell, 2: buy)
+        4,                   // [11] deal id
+        "ETH",              // [12] 基準貨幣
+        "BCH"               // [13] 計價貨幣
+    ]
+    ```
+
 ## 排程相關
 
 - me_history.c
