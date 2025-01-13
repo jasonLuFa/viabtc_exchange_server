@@ -26,6 +26,9 @@
      - 從 Redis 讀取最後一次同步的數據(`k:offset`)
      - 從 Kafka 重新讀取最新消息來補充期間的更新
      - 確保數據最終一致性
+- marketprice 中的命令處理流程，可區分兩種流程
+  - 使用 response 緩存 (CMD_MARKET_STATUS, CMD_MARKET_KLINE, CMD_MARKET_STATUS_TODAY)
+  - 不使用 response 緩存 (CMD_MARKET_DEALS, CMD_MARKET_LAST)
 
 ```mermaid
 graph TD
@@ -90,6 +93,19 @@ graph TD
     }
     ```
 
+    ```mermaid
+    sequenceDiagram
+        Client->>Server: market.status (market, period)
+        Server->>Cache: 查詢緩存
+        alt 緩存命中
+            Cache-->>Server: 返回緩存
+        else 緩存未命中
+            Server->>Memory: 查詢並合併 sec/min 數據
+            Server->>Cache: 更新緩存
+        end
+        Server->>Client: 返回結果
+    ```
+
 ### 2. K線圖數據 (CMD_MARKET_KLINE)
 
 - **功能**: 獲取不同時間週期的 K 線數據
@@ -128,6 +144,20 @@ graph TD
     ]
   ```
 
+  ```mermaid
+  sequenceDiagram
+      Client->>Server: market.kline (market, start, end, interval)
+      Server->>Cache: 查詢緩存
+      alt 緩存命中
+          Cache-->>Server: 返回緩存
+      else 緩存未命中
+          Server->>Memory: 根據 interval 選擇並查詢對應週期數據
+          Note over Memory: sec/min/hour/day/week/month
+          Server->>Cache: 更新緩存
+      end
+      Server->>Client: 返回結果
+  ```
+
 ### 3. 最新成交記錄 (CMD_MARKET_DEALS)
 
 - **功能**: 獲取市場最新成交
@@ -153,10 +183,26 @@ graph TD
     ]
     ```
 
+    ```mermaid
+    sequenceDiagram
+        Client->>Server: market.deals (market, limit, last_id)
+        Note over Server: 不使用緩存
+        Server->>Memory: 直接從 deals_json 獲取最新成交
+        Server->>Client: 返回結果
+    ```
+
 ### 4. 最新價格查詢 (CMD_MARKET_LAST)
 
 - **功能**: 獲取市場最新成交價格
 - **更新機制**: 實時更新
+
+  ```mermaid
+  sequenceDiagram
+      Client->>Server: market.last (market)
+      Note over Server: 不使用緩存
+      Server->>Memory: 直接返回 market_info.last
+      Server->>Client: 返回結果
+  ```
 
 ### 5. 今日市場統計 (CMD_MARKET_STATUS_TODAY)
 
@@ -174,110 +220,123 @@ graph TD
     }
     ```
 
+    ```mermaid
+    sequenceDiagram
+        Client->>Server: market.status_today (market)
+        Server->>Cache: 查詢緩存
+        alt 緩存命中
+            Cache-->>Server: 返回緩存
+        else 緩存未命中
+            Server->>Memory: 查詢當日 K 線數據
+            Server->>Cache: 更新緩存
+        end
+        Server->>Client: 返回結果
+    ```
+
 ## 處理 matchengine 訊息
 
 - 作為 kafka deals topic 的 consumer
 
 1. **訊息接收**:
 
-```c
-void on_deals_message(sds message, int64_t offset) {
-    // 1. 解析交易信息
-    json_t *json = json_loadb(message, sdslen(message), 0, NULL);
-    // 2. 更新市場數據
-    market_update(market, timestamp, price, amount, side, id);
-    // 3. 更新 K 線數據
-    add_update(info, KLINE_SEC, timestamp);
-    add_update(info, KLINE_MIN, timestamp);
-    add_update(info, KLINE_HOUR, timestamp);
-    add_update(info, KLINE_DAY, timestamp);
-}
-```
+    ```c
+    void on_deals_message(sds message, int64_t offset) {
+        // 1. 解析交易信息
+        json_t *json = json_loadb(message, sdslen(message), 0, NULL);
+        // 2. 更新市場數據
+        market_update(market, timestamp, price, amount, side, id);
+        // 3. 更新 K 線數據
+        add_update(info, KLINE_SEC, timestamp);
+        add_update(info, KLINE_MIN, timestamp);
+        add_update(info, KLINE_HOUR, timestamp);
+        add_update(info, KLINE_DAY, timestamp);
+    }
+    ```
 
 2. **訊息存儲**:
 
-```c
-int flush_kline(redisContext *context, struct market_info *info, struct update_key *ukey) {
-    // 1. 獲取 K 線數據
-    dict_t *dict = get_kline_dict(info, ukey->kline_type);
-    // 2. 構建 Redis key
-    sds key = get_kline_key(info->name, ukey->kline_type, ukey->timestamp);
-    // 3. 存儲到 Redis
-    redis_zadd(context, key, ukey->timestamp, json);
-}
-```
+    ```c
+    int flush_kline(redisContext *context, struct market_info *info, struct update_key *ukey) {
+        // 1. 獲取 K 線數據
+        dict_t *dict = get_kline_dict(info, ukey->kline_type);
+        // 2. 構建 Redis key
+        sds key = get_kline_key(info->name, ukey->kline_type, ukey->timestamp);
+        // 3. 存儲到 Redis
+        redis_zadd(context, key, ukey->timestamp, json);
+    }
+    ```
 
 ## 緩存機制
 
 1. **內存緩存**:
 
-```c
-struct market_info {
-    char   *name;          // 市場名稱
-    mpd_t  *last;          // 最新價格
-    dict_t *sec;           // 秒級數據
-    dict_t *min;           // 分鐘級數據
-    dict_t *hour;          // 小時級數據
-    dict_t *day;           // 日級數據
-    dict_t *update;        // 更新標記
-    list_t *deals;         // 最新成交 string 格式 (主要用於將數據持久化到 Redis)
-    list_t *deals_json;    // 最新成交 json (用於快速響應 API 請求)
-    double update_time;    // 更新時間
-};
-```
-
-- dict_t
-  - K線數據字典 (sec/min/hour/day)
-    - Key: time_t (時間戳)
-    - Value: struct kline_info
-
-        ```c
-        struct kline_info {
-            mpd_t *open;    // 開盤價
-            mpd_t *close;   // 收盤價
-            mpd_t *high;    // 最高價
-            mpd_t *low;     // 最低價
-            mpd_t *volume;  // 成交量
-            mpd_t *deal;    // 成交額
-        }
-        ```
-
-  - update 標記字典: 是一個"待同步清單"，記錄著哪些 K 線數據需要被同步到 Redis
-    - Key: update_key 
-
-        ```c
-        struct update_key {
-            int kline_type;    // K線類型（秒/分/時/日）
-            time_t timestamp;  // 對應的時間戳
-        }
-        ```
-
-    - Value: NULL
-
-- list_t
-  - deals 和 deals_json:
-
-    ```json
-    {
-        "id": 4,                      // 交易ID
-        "time": 1736492189.0142901,   // 時間戳
-        "price": "200",               // 價格
-        "amount": "1",                // 數量
-        "type": "sell"               // 交易類型 (sell/buy)
-    }
+    ```c
+    struct market_info {
+        char   *name;          // 市場名稱
+        mpd_t  *last;          // 最新價格
+        dict_t *sec;           // 秒級數據
+        dict_t *min;           // 分鐘級數據
+        dict_t *hour;          // 小時級數據
+        dict_t *day;           // 日級數據
+        dict_t *update;        // 更新標記
+        list_t *deals;         // 最新成交 string 格式 (主要用於將數據持久化到 Redis)
+        list_t *deals_json;    // 最新成交 json (用於快速響應 API 請求)
+        double update_time;    // 更新時間
+    };
     ```
 
-1. **Redis 緩存**:
+   - dict_t
+     - K線數據字典 (sec/min/hour/day)
+       - Key: time_t (時間戳)
+       - Value: struct kline_info
 
-- K線數據: 使用 hash type, 存儲不同粒度的 K 線數據
-  - `k:{market}:1s (seconds)`
-  - `k:{market}:1m (minutes)`
-  - `k:{market}:1h (hours)`
-  - `k:{market}:1d (days)`
-  - 這邊的資料格式範例：["20", "20", "20", "20", "0.05", "1"] 依序對應 `kline_info` (`kline_from_str()`, `kline_from_str()`)
-- 交易記錄: `k:{market}:deals` (List type)
-- 最新價格: `k:{market}:last` (String type)
-- kafka 最後處理到的 offset: `k:offset`  (String type)
+           ```c
+           struct kline_info {
+               mpd_t *open;    // 開盤價
+               mpd_t *close;   // 收盤價
+               mpd_t *high;    // 最高價
+               mpd_t *low;     // 最低價
+               mpd_t *volume;  // 成交量
+               mpd_t *deal;    // 成交額
+           }
+           ```
+
+     - update 標記字典: 是一個"待同步清單"，記錄著哪些 K 線數據需要被同步到 Redis
+       - Key: update_key 
+
+           ```c
+           struct update_key {
+               int kline_type;    // K線類型（秒/分/時/日）
+               time_t timestamp;  // 對應的時間戳
+           }
+           ```
+
+       - Value: NULL
+
+   - list_t
+     - deals 和 deals_json:
+
+       ```json
+       {
+           "id": 4,                      // 交易ID
+           "time": 1736492189.0142901,   // 時間戳
+           "price": "200",               // 價格
+           "amount": "1",                // 數量
+           "type": "sell"               // 交易類型 (sell/buy)
+       }
+       ```
+
+2. **Redis 緩存**:
+
+   - K線數據: 使用 hash type, 存儲不同粒度的 K 線數據
+     - `k:{market}:1s (seconds)`
+     - `k:{market}:1m (minutes)`
+     - `k:{market}:1h (hours)`
+     - `k:{market}:1d (days)`
+     - 這邊的資料格式範例：["20", "20", "20", "20", "0.05", "1"] 依序對應 `kline_info` (`kline_from_str()`, `kline_from_str()`)
+   - 交易記錄: `k:{market}:deals` (List type)
+   - 最新價格: `k:{market}:last` (String type)
+   - kafka 最後處理到的 offset: `k:offset`  (String type)
   
 ## 排程相關
 
