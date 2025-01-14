@@ -1,0 +1,175 @@
+# AccessWS 服務
+
+- [AccessWS 服務](#accessws-服務)
+  - [概述](#概述)
+  - [認證機制](#認證機制)
+    - [1. API 認證 (server.sign)](#1-api-認證-serversign)
+    - [2. 用於一般用戶通過網頁或 App 訪問認證 (server.auth)](#2-用於一般用戶通過網頁或-app-訪問認證-serverauth)
+  - [與其他服務的 RPC 連接用途](#與其他服務的-rpc-連接用途)
+    - [MarketPrice 服務連接用途](#marketprice-服務連接用途)
+    - [ReadHistory 服務連接用途](#readhistory-服務連接用途)
+    - [MatchEngine 服務連接用途](#matchengine-服務連接用途)
+  - [記憶體緩存相關](#記憶體緩存相關)
+
+## 概述
+
+- AccessWS 是一個基於 WebSocket 的實時數據服務，提供：
+  - 市場數據實時推送
+  - 用戶資產變動通知
+  - 訂單狀態更新
+  - 系統狀態監控
+
+## 認證機制
+
+### 1. API 認證 (server.sign)
+
+- **用途**：驗證 API 訪問權限
+- **調用方式**：
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant AccessWS
+    participant SignService
+
+
+    Client->>AccessWS: WebSocket 連接
+    AccessWS->>AccessWS: 創建 session<br/>初始化 clt_info
+
+    Client->>AccessWS: server.sign 請求:<br/>- access_id<br/>- signature<br/>- tonce
+
+    AccessWS->>SignService: HTTP POST 請求驗證
+    
+    SignService->>SignService: 1. 驗證 access_id 存在<br/>2. 驗證簽名<br/>3. 檢查 tonce 時效性
+
+    alt 驗證成功
+        SignService-->>AccessWS: 返回用戶信息
+        AccessWS->>AccessWS: 更新 session 狀態:<br/>1. 設置 auth=true<br/>2. 保存 user_id
+        AccessWS-->>Client: 成功響應
+    else 驗證失敗
+        SignService-->>AccessWS: 錯誤信息
+        AccessWS-->>Client: 錯誤響應
+    end
+
+        alt 認證成功
+        Note over Client,AccessWS: 可以開始請求/訂閱個人用戶資料
+        Client->>AccessWS: 請求 (order/asset)
+        AccessWS->>AccessWS: 檢查 clt_info.auth
+        AccessWS-->>Client: 回應
+    end
+
+    Note over Client,AccessWS: WebSocket 連接保持，持續接收數據
+```
+
+### 2. 用於一般用戶通過網頁或 App 訪問認證 (server.auth)
+
+- **用途**：驗證一般用戶訪問權限
+- **調用方式**：
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant AccessWS
+    participant AuthService
+
+    Note over Client: 已獲得 JWT Token
+
+    Client->>AccessWS: WebSocket 連接
+    AccessWS->>AccessWS: 創建 session<br/>初始化 clt_info
+
+    Client->>AccessWS: server.auth 請求:<br/>- token<br/>- source
+
+    AccessWS->>AuthService: HTTP POST 驗證請求
+
+    AuthService->>AuthService: Token 驗證
+
+    alt 驗證成功
+        AuthService-->>AccessWS: 返回用戶信息
+        
+        AccessWS->>AccessWS: 更新 clt_info:<br/>1. auth = true<br/>2. user_id = response.user_id<br/>3. source = params[1]
+        
+        AccessWS-->>Client: 成功響應
+    else Token 無效/過期
+        AuthService-->>AccessWS: 返回錯誤信息
+        AccessWS-->>Client: 錯誤響應
+    end
+
+    alt 認證成功
+        Note over Client,AccessWS: 可以開始請求/訂閱個人用戶資料
+        Client->>AccessWS: 請求 (order/asset)
+        AccessWS->>AccessWS: 檢查 clt_info.auth
+        AccessWS-->>Client: 回應
+    end
+
+    Note over Client,AccessWS: WebSocket 連接保持，持續接收數據
+```
+
+## 與其他服務的 RPC 連接用途
+
+### MarketPrice 服務連接用途
+
+- K 線數據查詢（on_method_kline_query）: 不需授權
+- 市場價格查詢（on_method_price_query）: 不需授權
+- 市場狀態查詢（on_method_state_query）: 不需授權
+- 今日市場數據查詢（on_method_today_query）: 不需授權
+- 成交記錄查詢（on_method_deals_query）: 不需授權
+
+### ReadHistory 服務連接用途
+
+- 訂單歷史查詢（on_method_order_history）: 需授權
+- 資產歷史查詢（on_method_asset_history）: 需授權
+
+### MatchEngine 服務連接用途
+
+- 深度數據查詢（on_method_depth_query）: 不需授權
+- 訂單查詢（on_method_order_query）: 需授權
+- 資產查詢（on_method_asset_query）: 需授權
+
+## 記憶體緩存相關
+
+- 訂單相關 (`aw_order.c`)
+  - dict_sub: 用戶訂單訂閱管理
+    - **order.subscribe** 時將所有 markets 加入訂閱清單，**order.unsubscribe** 時移除
+    - Key: user_id
+    - Value: list_t<sub_unit>
+
+      ```c
+      // 訂閱單元結構
+      struct sub_unit {
+         void *ses;                              // WebSocket session
+         char market[MARKET_NAME_MAX_LEN];       // 市場名稱 (ex: BTCUSDT)
+      };
+      ```
+
+- 資產相關 (`aw_asset.c`)
+  - dict_sub
+    - **asset.subscribe** 時將 asset 加入訂閱清單，**asset.unsubscribe** 時移除
+    - Key: user_id
+    - Value: list_t<sub_unit>
+
+      ```c
+      // 訂閱單元結構
+      struct sub_unit {
+         void *ses;                         // WebSocket session
+         char asset[ASSET_NAME_MAX_LEN];    // 資產名稱 (ex: USDT, ETH, BTC...)
+      };
+      ```
+
+- 成交相關 (`aw_deals.c`)
+  - dict_market
+    - Key: market
+    - Value: market_val
+
+      ```c
+      // 市場值結構
+      struct market_val {
+         dict_t *sessions;    // 訂閱該市場的所有會話
+         list_t *deals;       // 最近的成交記錄
+         uint64_t last_id;    // 最後成交ID
+      };
+      ```
+
+- 快取相關 (`aw_server.c`)
+  - dict_cache
+    - Key: cache_key
+    - Value: json_t
