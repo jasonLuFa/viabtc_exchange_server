@@ -5,6 +5,7 @@
   - [認證機制](#認證機制)
     - [1. API 認證 (server.sign)](#1-api-認證-serversign)
     - [2. 用於一般用戶通過網頁或 App 訪問認證 (server.auth)](#2-用於一般用戶通過網頁或-app-訪問認證-serverauth)
+  - [處理 Kafka 資料流程圖](#處理-kafka-資料流程圖)
   - [與其他服務的 RPC 連接用途](#與其他服務的-rpc-連接用途)
     - [MarketPrice 服務連接用途](#marketprice-服務連接用途)
     - [ReadHistory 服務連接用途](#readhistory-服務連接用途)
@@ -104,6 +105,68 @@ sequenceDiagram
     Note over Client,AccessWS: WebSocket 連接保持，持續接收數據
 ```
 
+## 處理 Kafka 資料流程圖
+
+```mermaid
+sequenceDiagram
+    participant K as Kafka
+    participant A as accessws
+    participant ME as matchengine
+    participant C as WebSocket Client
+
+    %% 初始訂閱流程
+    C->>A: asset_subscribe(user_id, ses, asset)
+    Note over A: 將 client session 加入<br/>資產訂閱列表 dict_sub
+    
+    C->>A: order_subscribe(user_id, ses, market)
+    Note over A: 將 client session 加入<br/>訂單訂閱列表 dict_sub
+
+    %% Kafka Balance Topic 處理流程
+    K->>A: Balance Message
+    
+    rect rgb(200, 230, 200)
+        Note over A: 檢查是否有訂閱該資產
+        A->>A: 創建 state_entry<br/>保存 user_id 和 asset
+        A->>ME: CMD_BALANCE_QUERY
+        ME-->>A: Balance Query Response
+        Note over A: on_backend_recv_pkg
+        A->>A: on_balance_query_reply
+        A->>C: send_notify("asset.update", result)
+        Note over C:  餘額變更消息
+    end
+
+    %% Kafka Order Topic 處理流程
+    K->>A: Order Message( BTCUSDT )
+    
+    rect rgb(24, 210, 200)
+        Note over A: 檢查是否有訂閱該市場
+        A->>C: send_notify("order.update", params)
+        Note over C: 通知客戶端訂單狀態變化
+    end
+    
+    rect rgb(200, 230, 200)
+        Note over A: 檢查是否有訂閱該資產
+        A->>A: 創建 state_entry<br/>保存 user_id 和 asset
+        A->>ME: CMD_BALANCE_QUERY
+        ME-->>A: Balance Query Response
+        Note over A: on_backend_recv_pkg
+        A->>A: on_balance_query_reply
+        A->>C: send_notify("asset.update", result)
+        Note over C: 通知 "基準貨幣" (BTC) 餘額
+    end
+    
+    rect rgb(200, 230, 200)
+        Note over A: 檢查是否有訂閱該資產
+        A->>A: 創建 state_entry<br/>保存 user_id 和 asset
+        A->>ME: CMD_BALANCE_QUERY
+        ME-->>A: Balance Query Response
+        Note over A: on_backend_recv_pkg
+        A->>A: on_balance_query_reply
+        A->>C: send_notify("asset.update", result)
+        Note over C: 通知 "計價貨幣" (USDT) 餘額
+    end
+```
+
 ## 與其他服務的 RPC 連接用途
 
 ### MarketPrice 服務連接用途
@@ -142,7 +205,7 @@ sequenceDiagram
       ```
 
 - 資產相關 (`aw_asset.c`)
-  - dict_sub
+  - dict_sub: 用戶資產餘額訂閱管理
     - **asset.subscribe** 時將 asset 加入訂閱清單，**asset.unsubscribe** 時移除
     - Key: user_id
     - Value: list_t<sub_unit>
@@ -156,7 +219,7 @@ sequenceDiagram
       ```
 
 - 成交相關 (`aw_deals.c`)
-  - dict_market
+  - dict_market: 用戶成交記錄訂閱管理
     - Key: market
     - Value: market_val
 

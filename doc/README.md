@@ -11,6 +11,7 @@
     - [啟動 UI](#啟動-ui)
     - [測試步驟](#測試步驟)
   - [不同服務介紹](#不同服務介紹)
+  - [其他](#其他)
 
 ## 啟動環境
 
@@ -98,3 +99,7 @@
 - [readhistory](readhistory.md)
 - [accesshttp](accesshttp.md)
 - [accessws](accessws.md)
+
+## 其他
+
+- [other](other.md)
