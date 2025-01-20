@@ -11,6 +11,7 @@
     - [ReadHistory 服務連接用途](#readhistory-服務連接用途)
     - [MatchEngine 服務連接用途](#matchengine-服務連接用途)
   - [記憶體緩存相關](#記憶體緩存相關)
+  - [排程相關](#排程相關)
 
 ## 概述
 
@@ -232,7 +233,49 @@ sequenceDiagram
       };
       ```
 
-- 快取相關 (`aw_server.c`)
+- resp 相關 (`aw_server.c`)
   - dict_cache
     - Key: cache_key
     - Value: json_t
+
+- kline 相關 (`aw_kline.c`)
+  - dict_kline: K 線圖資料訂閱管理
+    - Key: kline_key
+    - Value: kline_val
+
+      ```c
+      struct kline_key {
+          char market[MARKET_NAME_MAX_LEN];
+          int interval;
+      };
+
+      struct kline_val {
+          dict_t *sessions;
+          json_t *last;
+      };
+      ```
+
+## 排程相關
+
+- aw_kline.c
+  - 每 settings.kline_interval 秒更新 K 線圖資料
+  - 會調用 **marketprice** 服務的 *CMD_MARKET_KLINE* 命令並送到 client
+- aw_depth.c
+  - 每 settings.depth_interval 秒更新深度圖資料
+  - 會調用 **matchengin** 服務的 *CMD_ORDER_BOOK_DEPTH* 命令並送到 client
+- aw_deals.c
+  - 每 settings.deals_interval 秒更新成交記錄
+  - 會調用 **marketprice** 服務的 *CMD_MARKET_DEALS* 命令並送到 client
+- aw_state.c
+  - 每 settings.state_interval 秒更新市場狀態
+  - 會調用 **marketprice** 服務的 *CMD_MARKET_STATUS* 命令並送到 client
+- aw_server.c
+  - 每 60 秒清理快取資料
+- aw_today.c
+  - 每 settings.today_interval 秒更新今日市場資訊
+  - 會調用 **marketprice** 服務的 *CMD_MARKET_STATUS_TODAY* 命令並送到 client
+- aw_main.c
+  - 每 0.5 秒檢查 cron 任務
+- aw_price.c
+  - 每 settings.price_interval 秒更新價格資訊
+  - 會調用 **marketprice** 服務的 *CMD_MARKET_LAST* 命令並送到 client
