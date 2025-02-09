@@ -36,7 +36,7 @@ static int dump_orders_list(MYSQL *conn, const char *table, skiplist_t *list)
             sql = sdscatprintf(sql, ", ");
         }
 
-        sql = sdscatprintf(sql, "(%"PRIu64", %u, %u, %f, %f, %u, '%s' , ",
+        sql = sdscatprintf(sql, "(%"PRIu64", %u, %u, %f, %f, %"PRIu64", '%s' , ",
                 order->id, order->type, order->side, order->create_time, order->update_time, order->user_id, order->market);
         sql = sql_append_mpd(sql, order->price, true);
         sql = sql_append_mpd(sql, order->amount, true);
@@ -140,7 +140,7 @@ static int dump_balance_dict(MYSQL *conn, const char *table, dict_t *dict)
             sql = sdscatprintf(sql, ", ");
         }
 
-        sql = sdscatprintf(sql, "(NULL, %u, '%s', %u, ", key->user_id, key->asset, key->type);
+        sql = sdscatprintf(sql, "(NULL, %"PRIu64", '%s', %u, ", key->user_id, key->asset, key->type);
         sql = sql_append_mpd(sql, balance, false);
         sql = sdscatprintf(sql, ")");
 
@@ -205,4 +205,3 @@ int dump_balance(MYSQL *conn, const char *table)
 
     return 0;
 }
-

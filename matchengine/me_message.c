@@ -175,7 +175,7 @@ static int push_message(char *message, rd_kafka_topic_t *topic, list_t *list)
     return 0;
 }
 
-int push_balance_message(double t, uint32_t user_id, const char *asset, const char *business, mpd_t *change)
+int push_balance_message(double t, uint64_t user_id, const char *asset, const char *business, mpd_t *change)
 {
     json_t *message = json_array();
     json_array_append_new(message, json_real(t));
@@ -248,4 +248,3 @@ sds message_status(sds reply)
     reply = sdscatprintf(reply, "message balances pending: %lu\n", list_balances->len);
     return reply;
 }
-

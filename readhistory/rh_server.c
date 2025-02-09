@@ -99,7 +99,7 @@ static int on_cmd_balance_history(MYSQL *conn, json_t *params, struct job_reply 
     if (json_array_size(params) != 7)
         goto invalid_argument;
 
-    uint32_t user_id = json_integer_value(json_array_get(params, 0));
+    uint64_t user_id = json_integer_value(json_array_get(params, 0));
     if (user_id == 0)
         goto invalid_argument;
     const char *asset = json_string_value(json_array_get(params, 1));
@@ -143,7 +143,7 @@ static int on_cmd_order_history(MYSQL *conn, json_t *params, struct job_reply *r
     if (json_array_size(params) < 6)
         goto invalid_argument;
 
-    uint32_t user_id = json_integer_value(json_array_get(params, 0));
+    uint64_t user_id = json_integer_value(json_array_get(params, 0));
     if (user_id == 0)
         goto invalid_argument;
     const char *market = json_string_value(json_array_get(params, 1));
@@ -246,7 +246,7 @@ static int on_cmd_market_deals(MYSQL *conn, json_t *params, struct job_reply *rs
     if (json_array_size(params) != 4)
         goto invalid_argument;
 
-    uint32_t user_id = json_integer_value(json_array_get(params, 0));
+    uint64_t user_id = json_integer_value(json_array_get(params, 0));
     if (user_id == 0)
         goto invalid_argument;
     const char *market = json_string_value(json_array_get(params, 1));
@@ -441,4 +441,3 @@ int init_server(void)
 
     return 0;
 }
-

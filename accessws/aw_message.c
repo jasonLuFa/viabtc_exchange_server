@@ -19,7 +19,7 @@ static int process_orders_message(json_t *msg)
     json_t *order = json_object_get(msg, "order");
     if (order == NULL)
         return -__LINE__;
-    uint32_t user_id = json_integer_value(json_object_get(order, "user"));
+    uint64_t user_id = json_integer_value(json_object_get(order, "user"));
     const char *stock = json_string_value(json_object_get(msg, "stock"));
     const char *money = json_string_value(json_object_get(msg, "money"));
     if (user_id == 0 || stock == NULL || money == NULL)
@@ -51,7 +51,7 @@ static void on_orders_message(sds message, int64_t offset)
 
 static int process_balances_message(json_t *msg)
 {
-    uint32_t user_id = json_integer_value(json_array_get(msg, 1));
+    uint64_t user_id = json_integer_value(json_array_get(msg, 1));
     const char *asset = json_string_value(json_array_get(msg, 2));
     if (user_id == 0 || asset == NULL) {
         return -__LINE__;
@@ -95,4 +95,3 @@ int init_message(void)
 
     return 0;
 }
-

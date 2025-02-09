@@ -143,7 +143,7 @@ static int on_cmd_balance_query(nw_ses *ses, rpc_pkg *pkg, json_t *params)
 
     if (!json_is_integer(json_array_get(params, 0)))
         return reply_error_invalid_argument(ses, pkg);
-    uint32_t user_id = json_integer_value(json_array_get(params, 0));
+    uint64_t user_id = (uint64_t) json_integer_value(json_array_get(params, 0));
     if (user_id == 0)
         return reply_error_invalid_argument(ses, pkg);
 
@@ -241,7 +241,7 @@ static int on_cmd_balance_update(nw_ses *ses, rpc_pkg *pkg, json_t *params)
     // user_id
     if (!json_is_integer(json_array_get(params, 0)))
         return reply_error_invalid_argument(ses, pkg);
-    uint32_t user_id = json_integer_value(json_array_get(params, 0));
+    uint64_t user_id = json_integer_value(json_array_get(params, 0));
 
     // asset
     if (!json_is_string(json_array_get(params, 1)))
@@ -363,7 +363,7 @@ static int on_cmd_order_put_limit(nw_ses *ses, rpc_pkg *pkg, json_t *params)
     // user_id
     if (!json_is_integer(json_array_get(params, 0)))
         return reply_error_invalid_argument(ses, pkg);
-    uint32_t user_id = json_integer_value(json_array_get(params, 0));
+    uint64_t user_id = json_integer_value(json_array_get(params, 0));
 
     // market
     if (!json_is_string(json_array_get(params, 1)))
@@ -463,7 +463,7 @@ static int on_cmd_order_put_market(nw_ses *ses, rpc_pkg *pkg, json_t *params)
     // user_id
     if (!json_is_integer(json_array_get(params, 0)))
         return reply_error_invalid_argument(ses, pkg);
-    uint32_t user_id = json_integer_value(json_array_get(params, 0));
+    uint64_t user_id = json_integer_value(json_array_get(params, 0));
 
     // market
     if (!json_is_string(json_array_get(params, 1)))
@@ -543,7 +543,7 @@ static int on_cmd_order_query(nw_ses *ses, rpc_pkg *pkg, json_t *params)
     // user_id
     if (!json_is_integer(json_array_get(params, 0)))
         return reply_error_invalid_argument(ses, pkg);
-    uint32_t user_id = json_integer_value(json_array_get(params, 0));
+    uint64_t user_id = json_integer_value(json_array_get(params, 0));
 
     // market
     if (!json_is_string(json_array_get(params, 1)))
@@ -606,7 +606,7 @@ static int on_cmd_order_cancel(nw_ses *ses, rpc_pkg *pkg, json_t *params)
     // user_id
     if (!json_is_integer(json_array_get(params, 0)))
         return reply_error_invalid_argument(ses, pkg);
-    uint32_t user_id = json_integer_value(json_array_get(params, 0));
+    uint64_t user_id = json_integer_value(json_array_get(params, 0));
 
     // market
     if (!json_is_string(json_array_get(params, 1)))
@@ -1235,4 +1235,3 @@ int init_server(void)
 
     return 0;
 }
-

@@ -2,7 +2,7 @@ USE trade_log;
 
 CREATE TABLE `slice_balance` (
     `id`            INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    `user_id`       INT UNSIGNED NOT NULL,
+    `user_id`       BIGINT UNSIGNED NOT NULL,
     `asset`         VARCHAR(30) NOT NULL,
     `t`             TINYINT UNSIGNED NOT NULL,
     `balance`       DECIMAL(30,16) NOT NULL
@@ -14,7 +14,7 @@ CREATE TABLE `slice_order` (
     `side`          TINYINT UNSIGNED NOT NULL,
     `create_time`   DOUBLE NOT NULL,
     `update_time`   DOUBLE NOT NULL,
-    `user_id`       INT UNSIGNED NOT NULL,
+    `user_id`       BIGINT UNSIGNED NOT NULL,
     `market`        VARCHAR(30) NOT NULL,
     `price`         DECIMAL(30,8) NOT NULL,
     `amount`        DECIMAL(30,8) NOT NULL,

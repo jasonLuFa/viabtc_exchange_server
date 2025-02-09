@@ -17,7 +17,7 @@ struct sub_unit {
 };
 
 struct state_data {
-    uint32_t user_id;
+    uint64_t user_id;
     char asset[ASSET_NAME_MAX_LEN];
 };
 
@@ -177,7 +177,7 @@ int init_asset(void)
     return 0;
 }
 
-int asset_subscribe(uint32_t user_id, nw_ses *ses, const char *asset)
+int asset_subscribe(uint64_t user_id, nw_ses *ses, const char *asset)
 {
     void *key = (void *)(uintptr_t)user_id;
     dict_entry *entry = dict_find(dict_sub, key);
@@ -209,7 +209,7 @@ int asset_subscribe(uint32_t user_id, nw_ses *ses, const char *asset)
     return 0;
 }
 
-int asset_unsubscribe(uint32_t user_id, nw_ses *ses)
+int asset_unsubscribe(uint64_t user_id, nw_ses *ses)
 {
     void *key = (void *)(uintptr_t)user_id;
     dict_entry *entry = dict_find(dict_sub, key);
@@ -234,7 +234,7 @@ int asset_unsubscribe(uint32_t user_id, nw_ses *ses)
     return 0;
 }
 
-int asset_on_update(uint32_t user_id, const char *asset)
+int asset_on_update(uint64_t user_id, const char *asset)
 {
     void *key = (void *)(uintptr_t)user_id;
     dict_entry *entry = dict_find(dict_sub, key);
@@ -281,4 +281,3 @@ int asset_on_update(uint32_t user_id, const char *asset)
 
     return 0;
 }
-

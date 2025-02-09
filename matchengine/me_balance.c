@@ -50,7 +50,10 @@ static void asset_dict_val_free(void *val)
 
 static uint32_t balance_dict_hash_function(const void *key)
 {
-    return dict_generic_hash_function(key, sizeof(struct balance_key));
+    const struct balance_key *k = key;
+    return dict_generic_hash_function(&k->user_id, sizeof(uint64_t)) ^
+           dict_generic_hash_function(&k->type, sizeof(uint32_t)) ^
+           dict_generic_hash_function(k->asset, strlen(k->asset));
 }
 
 static void *balance_dict_key_dup(const void *key)
@@ -69,7 +72,13 @@ static void *balance_dict_val_dup(const void *val)
 
 static int balance_dict_key_compare(const void *key1, const void *key2)
 {
-    return memcmp(key1, key2, sizeof(struct balance_key));
+    const struct balance_key *k1 = key1;
+    const struct balance_key *k2 = key2;
+    if (k1->user_id != k2->user_id)
+        return k1->user_id > k2->user_id ? 1 : -1;
+    if (k1->type != k2->type)
+        return k1->type > k2->type ? 1 : -1;
+    return strcmp(k1->asset, k2->asset);
 }
 
 static void balance_dict_key_free(void *key)
@@ -154,7 +163,7 @@ int asset_prec_show(const char *asset)
     return at ? at->prec_show: -1;
 }
 
-mpd_t *balance_get(uint32_t user_id, uint32_t type, const char *asset)
+mpd_t *balance_get(uint64_t user_id, uint32_t type, const char *asset)
 {
     struct balance_key key;
     key.user_id = user_id;
@@ -169,7 +178,7 @@ mpd_t *balance_get(uint32_t user_id, uint32_t type, const char *asset)
     return NULL;
 }
 
-void balance_del(uint32_t user_id, uint32_t type, const char *asset)
+void balance_del(uint64_t user_id, uint32_t type, const char *asset)
 {
     struct balance_key key;
     key.user_id = user_id;
@@ -178,7 +187,7 @@ void balance_del(uint32_t user_id, uint32_t type, const char *asset)
     dict_delete(dict_balance, &key);
 }
 
-mpd_t *balance_set(uint32_t user_id, uint32_t type, const char *asset, mpd_t *amount)
+mpd_t *balance_set(uint64_t user_id, uint32_t type, const char *asset, mpd_t *amount)
 {
     struct asset_type *at = get_asset_type(asset);
     if (at == NULL)
@@ -215,7 +224,7 @@ mpd_t *balance_set(uint32_t user_id, uint32_t type, const char *asset, mpd_t *am
     return result;
 }
 
-mpd_t *balance_add(uint32_t user_id, uint32_t type, const char *asset, mpd_t *amount)
+mpd_t *balance_add(uint64_t user_id, uint32_t type, const char *asset, mpd_t *amount)
 {
     struct asset_type *at = get_asset_type(asset);
     if (at == NULL)
@@ -241,7 +250,7 @@ mpd_t *balance_add(uint32_t user_id, uint32_t type, const char *asset, mpd_t *am
     return balance_set(user_id, type, asset, amount);
 }
 
-mpd_t *balance_sub(uint32_t user_id, uint32_t type, const char *asset, mpd_t *amount)
+mpd_t *balance_sub(uint64_t user_id, uint32_t type, const char *asset, mpd_t *amount)
 {
     struct asset_type *at = get_asset_type(asset);
     if (at == NULL)
@@ -266,7 +275,7 @@ mpd_t *balance_sub(uint32_t user_id, uint32_t type, const char *asset, mpd_t *am
     return result;
 }
 
-mpd_t *balance_freeze(uint32_t user_id, const char *asset, mpd_t *amount)
+mpd_t *balance_freeze(uint64_t user_id, const char *asset, mpd_t *amount)
 {
     struct asset_type *at = get_asset_type(asset);
     if (at == NULL)
@@ -292,7 +301,7 @@ mpd_t *balance_freeze(uint32_t user_id, const char *asset, mpd_t *amount)
     return available;
 }
 
-mpd_t *balance_unfreeze(uint32_t user_id, const char *asset, mpd_t *amount)
+mpd_t *balance_unfreeze(uint64_t user_id, const char *asset, mpd_t *amount)
 {
     struct asset_type *at = get_asset_type(asset);
     if (at == NULL)
@@ -318,7 +327,7 @@ mpd_t *balance_unfreeze(uint32_t user_id, const char *asset, mpd_t *amount)
     return freeze;
 }
 
-mpd_t *balance_total(uint32_t user_id, const char *asset)
+mpd_t *balance_total(uint64_t user_id, const char *asset)
 {
     mpd_t *balance = mpd_new(&mpd_ctx);
     mpd_copy(balance, mpd_zero, &mpd_ctx);
@@ -361,4 +370,3 @@ int balance_status(const char *asset, mpd_t *total, size_t *available_count, mpd
 
     return 0;
 }
-

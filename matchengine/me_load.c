@@ -43,7 +43,7 @@ int load_orders(MYSQL *conn, const char *table)
             order->side = strtoul(row[2], NULL, 0);
             order->create_time = strtod(row[3], NULL);
             order->update_time = strtod(row[4], NULL);
-            order->user_id = strtoul(row[5], NULL, 0);
+            order->user_id = strtoull(row[5], NULL, 0);
             order->market = strdup(row[6]);
             order->price = decimal(row[7], market->money_prec);
             order->amount = decimal(row[8], market->stock_prec);
@@ -95,7 +95,7 @@ int load_balance(MYSQL *conn, const char *table)
         for (size_t i = 0; i < num_rows; ++i) {
             MYSQL_ROW row = mysql_fetch_row(result);
             last_id = strtoull(row[0], NULL, 0);
-            uint32_t user_id = strtoul(row[1], NULL, 0);
+            uint64_t user_id = strtoull(row[1], NULL, 0);
             const char *asset = row[2];
             if (!asset_exist(asset)) {
                 continue;
@@ -121,7 +121,7 @@ static int load_update_balance(json_t *params)
     // user_id
     if (!json_is_integer(json_array_get(params, 0)))
         return -__LINE__;
-    uint32_t user_id = json_integer_value(json_array_get(params, 0));
+    uint64_t user_id = json_integer_value(json_array_get(params, 0));
 
     // asset
     if (!json_is_string(json_array_get(params, 1)))
@@ -173,7 +173,7 @@ static int load_limit_order(json_t *params)
     // user_id
     if (!json_is_integer(json_array_get(params, 0)))
         return -__LINE__;
-    uint32_t user_id = json_integer_value(json_array_get(params, 0));
+    uint64_t user_id = json_integer_value(json_array_get(params, 0));
 
     // market
     if (!json_is_string(json_array_get(params, 1)))
@@ -268,7 +268,7 @@ static int load_market_order(json_t *params)
     // user_id
     if (!json_is_integer(json_array_get(params, 0)))
         return -__LINE__;
-    uint32_t user_id = json_integer_value(json_array_get(params, 0));
+    uint64_t user_id = json_integer_value(json_array_get(params, 0));
 
     // market
     if (!json_is_string(json_array_get(params, 1)))
@@ -337,7 +337,7 @@ static int load_cancel_order(json_t *params)
     // user_id
     if (!json_is_integer(json_array_get(params, 0)))
         return -__LINE__;
-    uint32_t user_id = json_integer_value(json_array_get(params, 0));
+    uint64_t user_id = json_integer_value(json_array_get(params, 0));
 
     // market
     if (!json_is_string(json_array_get(params, 1)))
@@ -359,7 +359,7 @@ static int load_cancel_order(json_t *params)
 
     int ret = market_cancel_order(false, NULL, market, order);
     if (ret < 0) {
-        log_error("market_cancel_order id: %"PRIu64", user id: %u, market: %s", order_id, user_id, market_name);
+        log_error("market_cancel_order id: %"PRIu64", user id: %"PRIu64", market: %s", order_id, user_id, market_name);
         return -__LINE__;
     }
 
@@ -441,4 +441,3 @@ int load_operlog(MYSQL *conn, const char *table, uint64_t *start_id)
     *start_id = last_id;
     return 0;
 }
-

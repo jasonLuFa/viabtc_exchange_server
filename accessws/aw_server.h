@@ -10,7 +10,7 @@
 
 struct clt_info {
     bool        auth;
-    uint32_t    user_id;
+    uint64_t    user_id;
     char        *source;
 };
 
@@ -27,4 +27,3 @@ int send_success(nw_ses *ses, uint64_t id);
 int send_notify(nw_ses *ses, const char *method, json_t *params);
 
 # endif
-

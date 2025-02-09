@@ -191,7 +191,7 @@ static int append_user_order(order_t *order)
         sql = sdscatprintf(sql, ", ");
     }
 
-    sql = sdscatprintf(sql, "(%"PRIu64", %f, %f, %u, '%s', '%s', %u, %u, ", order->id,
+    sql = sdscatprintf(sql, "(%"PRIu64", %f, %f, %"PRIu64", '%s', '%s', %u, %u, ", order->id,
         order->create_time, order->update_time, order->user_id, order->market, order->source, order->type, order->side);
     sql = sql_append_mpd(sql, order->price, true);
     sql = sql_append_mpd(sql, order->amount, true);
@@ -223,7 +223,7 @@ static int append_order_detail(order_t *order)
         sql = sdscatprintf(sql, ", ");
     }
 
-    sql = sdscatprintf(sql, "(%"PRIu64", %f, %f, %u, '%s', '%s', %u, %u, ", order->id,
+    sql = sdscatprintf(sql, "(%"PRIu64", %f, %f, %"PRIu64", '%s', '%s', %u, %u, ", order->id,
         order->create_time, order->update_time, order->user_id, order->market, order->source, order->type, order->side);
     sql = sql_append_mpd(sql, order->price, true);
     sql = sql_append_mpd(sql, order->amount, true);
@@ -239,7 +239,7 @@ static int append_order_detail(order_t *order)
     return 0;
 }
 
-static int append_order_deal(double t, uint32_t user_id, uint64_t deal_id, uint64_t order_id, uint64_t deal_order_id, int role, mpd_t *price, mpd_t *amount, mpd_t *deal, mpd_t *fee, mpd_t *deal_fee)
+static int append_order_deal(double t, uint64_t user_id, uint64_t deal_id, uint64_t order_id, uint64_t deal_order_id, int role, mpd_t *price, mpd_t *amount, mpd_t *deal, mpd_t *fee, mpd_t *deal_fee)
 {
     struct dict_sql_key key;
     key.hash = order_id % HISTORY_HASH_NUM;
@@ -254,7 +254,7 @@ static int append_order_deal(double t, uint32_t user_id, uint64_t deal_id, uint6
         sql = sdscatprintf(sql, ", ");
     }
 
-    sql = sdscatprintf(sql, "(NULL, %f, %u, %"PRIu64", %"PRIu64", %"PRIu64", %d, ", t, user_id, deal_id, order_id, deal_order_id, role);
+    sql = sdscatprintf(sql, "(NULL, %f, %"PRIu64", %"PRIu64", %"PRIu64", %"PRIu64", %d, ", t, user_id, deal_id, order_id, deal_order_id, role);
     sql = sql_append_mpd(sql, price, true);
     sql = sql_append_mpd(sql, amount, true);
     sql = sql_append_mpd(sql, deal, true);
@@ -267,7 +267,7 @@ static int append_order_deal(double t, uint32_t user_id, uint64_t deal_id, uint6
     return 0;
 }
 
-static int append_user_deal(double t, uint32_t user_id, const char *market, uint64_t deal_id, uint64_t order_id, uint64_t deal_order_id, int side, int role, mpd_t *price, mpd_t *amount, mpd_t *deal, mpd_t *fee, mpd_t *deal_fee)
+static int append_user_deal(double t, uint64_t user_id, const char *market, uint64_t deal_id, uint64_t order_id, uint64_t deal_order_id, int side, int role, mpd_t *price, mpd_t *amount, mpd_t *deal, mpd_t *fee, mpd_t *deal_fee)
 {
     struct dict_sql_key key;
     key.hash = user_id % HISTORY_HASH_NUM;
@@ -282,7 +282,7 @@ static int append_user_deal(double t, uint32_t user_id, const char *market, uint
         sql = sdscatprintf(sql, ", ");
     }
 
-    sql = sdscatprintf(sql, "(NULL, %f, %u, '%s', %"PRIu64", %"PRIu64", %"PRIu64", %d, %d, ", t, user_id, market, deal_id, order_id, deal_order_id, side, role);
+    sql = sdscatprintf(sql, "(NULL, %f, %"PRIu64", '%s', %"PRIu64", %"PRIu64", %"PRIu64", %d, %d, ", t, user_id, market, deal_id, order_id, deal_order_id, side, role);
     sql = sql_append_mpd(sql, price, true);
     sql = sql_append_mpd(sql, amount, true);
     sql = sql_append_mpd(sql, deal, true);
@@ -295,7 +295,7 @@ static int append_user_deal(double t, uint32_t user_id, const char *market, uint
     return 0;
 }
 
-static int append_user_balance(double t, uint32_t user_id, const char *asset, const char *business, mpd_t *change, mpd_t *balance, const char *detail)
+static int append_user_balance(double t, uint64_t user_id, const char *asset, const char *business, mpd_t *change, mpd_t *balance, const char *detail)
 {
     struct dict_sql_key key;
     key.hash = user_id % HISTORY_HASH_NUM;
@@ -311,7 +311,7 @@ static int append_user_balance(double t, uint32_t user_id, const char *asset, co
     }
 
     char buf[10 * 1024];
-    sql = sdscatprintf(sql, "(NULL, %f, %u, '%s', '%s', ", t, user_id, asset, business);
+    sql = sdscatprintf(sql, "(NULL, %f, %"PRIu64", '%s', '%s', ", t, user_id, asset, business);
     sql = sql_append_mpd(sql, change, true);
     sql = sql_append_mpd(sql, balance, true);
     mysql_real_escape_string(mysql_conn, buf, detail, strlen(detail));
@@ -341,7 +341,7 @@ int append_order_deal_history(double t, uint64_t deal_id, order_t *ask, int ask_
     return 0;
 }
 
-int append_user_balance_history(double t, uint32_t user_id, const char *asset, const char *business, mpd_t *change, const char *detail)
+int append_user_balance_history(double t, uint64_t user_id, const char *asset, const char *business, mpd_t *change, const char *detail)
 {
     mpd_t *balance = balance_total(user_id, asset);
     append_user_balance(t, user_id, asset, business, change, balance, detail);
@@ -362,4 +362,3 @@ sds history_status(sds reply)
 {
     return sdscatprintf(reply, "history pending %d\n", job->request_count);
 }
-

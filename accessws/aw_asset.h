@@ -8,9 +8,8 @@
 
 int init_asset(void);
 
-int asset_subscribe(uint32_t user_id, nw_ses *ses, const char *asset);
-int asset_unsubscribe(uint32_t user_id, nw_ses *ses);
-int asset_on_update(uint32_t user_id, const char *asset);
+int asset_subscribe(uint64_t user_id, nw_ses *ses, const char *asset);
+int asset_unsubscribe(uint64_t user_id, nw_ses *ses);
+int asset_on_update(uint64_t user_id, const char *asset);
 
 # endif
-

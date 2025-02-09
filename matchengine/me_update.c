@@ -13,7 +13,7 @@ static dict_t *dict_update;
 static nw_timer timer;
 
 struct update_key {
-    uint32_t    user_id;
+    uint64_t    user_id;
     char        asset[ASSET_NAME_MAX_LEN + 1];
     char        business[BUSINESS_NAME_MAX_LEN + 1];
     uint64_t    business_id;
@@ -92,7 +92,7 @@ int init_update(void)
     return 0;
 }
 
-int update_user_balance(bool real, uint32_t user_id, const char *asset, const char *business, uint64_t business_id, mpd_t *change, json_t *detail)
+int update_user_balance(bool real, uint64_t user_id, const char *asset, const char *business, uint64_t business_id, mpd_t *change, json_t *detail)
 {
     struct update_key key;
     key.user_id = user_id;
@@ -131,4 +131,3 @@ int update_user_balance(bool real, uint32_t user_id, const char *asset, const ch
 
     return 0;
 }
-

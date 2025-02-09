@@ -13,7 +13,7 @@ uint64_t order_id_start;
 uint64_t deals_id_start;
 
 struct dict_user_key {
-    uint32_t    user_id;
+    uint64_t    user_id;
 };
 
 struct dict_order_key {
@@ -563,7 +563,7 @@ static int execute_limit_bid_order(bool real, market_t *m, order_t *taker)
     return 0;
 }
 
-int market_put_limit_order(bool real, json_t **result, market_t *m, uint32_t user_id, uint32_t side, mpd_t *amount, mpd_t *price, mpd_t *taker_fee, mpd_t *maker_fee, const char *source)
+int market_put_limit_order(bool real, json_t **result, market_t *m, uint64_t user_id, uint32_t side, mpd_t *amount, mpd_t *price, mpd_t *taker_fee, mpd_t *maker_fee, const char *source)
 {
     if (side == MARKET_ORDER_SIDE_ASK) {
         mpd_t *balance = balance_get(user_id, BALANCE_TYPE_AVAILABLE, m->stock);
@@ -865,7 +865,7 @@ static int execute_market_bid_order(bool real, market_t *m, order_t *taker)
     return 0;
 }
 
-int market_put_market_order(bool real, json_t **result, market_t *m, uint32_t user_id, uint32_t side, mpd_t *amount, mpd_t *taker_fee, const char *source)
+int market_put_market_order(bool real, json_t **result, market_t *m, uint64_t user_id, uint32_t side, mpd_t *amount, mpd_t *taker_fee, const char *source)
 {
     if (side == MARKET_ORDER_SIDE_ASK) {
         mpd_t *balance = balance_get(user_id, BALANCE_TYPE_AVAILABLE, m->stock);
@@ -991,7 +991,7 @@ order_t *market_get_order(market_t *m, uint64_t order_id)
     return NULL;
 }
 
-skiplist_t *market_get_order_list(market_t *m, uint32_t user_id)
+skiplist_t *market_get_order_list(market_t *m, uint64_t user_id)
 {
     struct dict_user_key key = { .user_id = user_id };
     dict_entry *entry = dict_find(m->users, &key);
@@ -1031,4 +1031,3 @@ sds market_status(sds reply)
     reply = sdscatprintf(reply, "deals last ID: %"PRIu64"\n", deals_id_start);
     return reply;
 }
-

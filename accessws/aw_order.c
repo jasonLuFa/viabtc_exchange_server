@@ -61,7 +61,7 @@ int init_order(void)
     return 0;
 }
 
-int order_subscribe(uint32_t user_id, nw_ses *ses, const char *market)
+int order_subscribe(uint64_t user_id, nw_ses *ses, const char *market)
 {
     void *key = (void *)(uintptr_t)user_id;
     dict_entry *entry = dict_find(dict_sub, key);
@@ -93,7 +93,7 @@ int order_subscribe(uint32_t user_id, nw_ses *ses, const char *market)
     return 0;
 }
 
-int order_unsubscribe(uint32_t user_id, nw_ses *ses)
+int order_unsubscribe(uint64_t user_id, nw_ses *ses)
 {
     void *key = (void *)(uintptr_t)user_id;
     dict_entry *entry = dict_find(dict_sub, key);
@@ -118,7 +118,7 @@ int order_unsubscribe(uint32_t user_id, nw_ses *ses)
     return 0;
 }
 
-int order_on_update(uint32_t user_id, int event, json_t *order)
+int order_on_update(uint64_t user_id, int event, json_t *order)
 {
     const char *market = json_string_value(json_object_get(order, "market"));
     if (market == NULL)
@@ -147,4 +147,3 @@ int order_on_update(uint32_t user_id, int event, json_t *order)
 
     return 0;
 }
-

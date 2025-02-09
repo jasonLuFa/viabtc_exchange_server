@@ -87,7 +87,7 @@ static void on_result(struct state_data *state, sds token, json_t *result)
     if (data == NULL)
         goto error;
     struct clt_info *info = state->info;
-    uint32_t user_id = json_integer_value(json_object_get(data, "user_id"));
+    uint64_t user_id = json_integer_value(json_object_get(data, "user_id"));
     if (user_id == 0)
         goto error;
 
@@ -98,7 +98,7 @@ static void on_result(struct state_data *state, sds token, json_t *result)
 
     info->auth = true;
     info->user_id = user_id;
-    log_info("auth success, token: %s, user_id: %u", token, info->user_id);
+    log_info("auth success, token: %s, user_id: %lu", token, info->user_id);
     send_success(state->ses, state->request_id);
 
     return;
@@ -184,4 +184,3 @@ int init_auth(void)
 
     return 0;
 }
-

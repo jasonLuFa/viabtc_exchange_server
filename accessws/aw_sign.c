@@ -104,7 +104,7 @@ static void on_result(struct state_data *state, struct sign_request *request, js
     if (data == NULL)
         goto error;
     struct clt_info *info = state->info;
-    uint32_t user_id = json_integer_value(json_object_get(data, "user_id"));
+    uint64_t user_id = json_integer_value(json_object_get(data, "user_id"));
     if (user_id == 0)
         goto error;
 
@@ -115,7 +115,7 @@ static void on_result(struct state_data *state, struct sign_request *request, js
 
     info->auth = true;
     info->user_id = user_id;
-    log_error("sign success, access_id: %s, user_id: %u", request->access_id, user_id);
+    log_error("sign success, access_id: %s, user_id: %"PRIu64, request->access_id, user_id);
     send_success(state->ses, state->request_id);
 
     return;
@@ -211,4 +211,3 @@ int init_sign(void)
 
     return 0;
 }
-

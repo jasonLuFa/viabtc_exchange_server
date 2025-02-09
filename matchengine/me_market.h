@@ -14,12 +14,12 @@ extern uint64_t deals_id_start;
 typedef struct order_t {
     // 基本信息
     uint64_t        id;
+    uint64_t        user_id;
     uint32_t        type; // 訂單類型（1: MARKET_ORDER_TYPE_LIMIT、2: MARKET_ORDER_TYPE_MARKET）
     uint32_t        side; // 買賣方向 (1: MARKET_ORDER_SIDE_ASK, 2: MARKET_ORDER_SIDE_BID)
     double          create_time; // 訂單創建時間
     double          update_time; // 訂單最後更新時間
     // 用戶和市場信息
-    uint32_t        user_id;
     char            *market; // 交易市場（如：BTC/USDT）
     char            *source; // 訂單來源
     // 價格和數量信息
@@ -57,17 +57,16 @@ typedef struct market_t {
 market_t *market_create(struct market *conf);
 int market_get_status(market_t *m, size_t *ask_count, mpd_t *ask_amount, size_t *bid_count, mpd_t *bid_amount);
 
-int market_put_limit_order(bool real, json_t **result, market_t *m, uint32_t user_id, uint32_t side, mpd_t *amount, mpd_t *price, mpd_t *taker_fee, mpd_t *maker_fee, const char *source);
-int market_put_market_order(bool real, json_t **result, market_t *m, uint32_t user_id, uint32_t side, mpd_t *amount, mpd_t *taker_fee, const char *source);
+int market_put_limit_order(bool real, json_t **result, market_t *m, uint64_t user_id, uint32_t side, mpd_t *amount, mpd_t *price, mpd_t *taker_fee, mpd_t *maker_fee, const char *source);
+int market_put_market_order(bool real, json_t **result, market_t *m, uint64_t user_id, uint32_t side, mpd_t *amount, mpd_t *taker_fee, const char *source);
 int market_cancel_order(bool real, json_t **result, market_t *m, order_t *order);
 
 int market_put_order(market_t *m, order_t *order);
 
 json_t *get_order_info(order_t *order);
 order_t *market_get_order(market_t *m, uint64_t id);
-skiplist_t *market_get_order_list(market_t *m, uint32_t user_id);
+skiplist_t *market_get_order_list(market_t *m, uint64_t user_id);
 
 sds market_status(sds reply);
 
 # endif
-
