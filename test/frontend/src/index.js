@@ -442,7 +442,7 @@ const ws_order_history_schema = {
 const ws_asset_query_schema = {
   type: "object",
   properties: {
-      asset: {type: "array", title: "Assets", items: { type: "string", default: "BTC"}}
+      assets: {type: "array", title: "Assets", items: { type: "string", default: "BTC"}}
   }
 };
 const ws_asset_history_schema = {
@@ -458,6 +458,19 @@ const ws_asset_history_schema = {
   }
 };
 
+const ws_order_subscribe_schema = {
+  type: "object",
+  properties: {
+      markets: {type: "array", title: "Markets", items: { type: "string", default: "BTCUSD"}}
+  }
+};
+
+const ws_asset_subscribe_schema = {
+  type: "object",
+  properties: {
+      assets: {type: "array", title: "Assets", items: { type: "string", default: "BTC"}}
+  }
+};
 
 const tabs = (
 <Grid>
@@ -538,11 +551,11 @@ const tabs = (
                 <FormBox title="Sign" ws_method="server.sign" schema={ws_sign_schema}/>
                 <FormBox title="Pending Order Query" ws_method="order.query" schema={ws_order_query_schema}/>
                 <FormBox title="Order History" ws_method="order.history" schema={ws_order_history_schema}/>
-                <FormBox title="Order Subscribe" ws_method="order.subscribe" schema={null_schema}/>
+                <FormBox title="Order Subscribe" ws_method="order.subscribe" schema={ws_order_subscribe_schema}/>
                 <FormBox title="Order Unsubscribe" ws_method="order.unsubscribe" schema={null_schema}/>
                 <FormBox title="Asset Query" ws_method="asset.query" schema={ws_asset_query_schema}/>
                 <FormBox title="Asset History" ws_method="asset.history" schema={ws_asset_history_schema}/>
-                <FormBox title="Asset Subscribe" ws_method="asset.subscribe" schema={null_schema}/>
+                <FormBox title="Asset Subscribe" ws_method="asset.subscribe" schema={ws_asset_subscribe_schema}/>
                 <FormBox title="Asset Unsubscribe" ws_method="asset.unsubscribe" schema={null_schema}/>
               </Accordion>
             </TabPanel>
