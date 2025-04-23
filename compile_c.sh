@@ -37,7 +37,7 @@ start_service() {
     ./${service} ${config} > /dev/null 2>&1 &
     cd ..
     # Wait a bit to ensure service starts
-    sleep 1
+    sleep 3
     # Check if service is running
     if pgrep -f "${service}" > /dev/null; then
         echo -e "${GREEN}${service} started successfully${NC}"
@@ -70,11 +70,11 @@ build_component "network"
 # Step 4: Build all other components
 components=(
     "matchengine"
-    "marketprice"
     "alertcenter"
     "accesshttp"
     "accessws"
     "readhistory"
+    "marketprice"
 )
 
 for component in "${components[@]}"; do
