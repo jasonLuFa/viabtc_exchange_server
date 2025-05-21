@@ -71,9 +71,12 @@ graph TD
 
 ## 核心功能
 
-### 1. 市場狀態查詢 (CMD_MARKET_STATUS)
+  ### 1. 市場狀態查詢 (CMD_MARKET_STATUS)
 
-- **功能**: 查詢指定市場的當前狀態
+- **功能**: 查詢指定市場的統計數據
+- **Function Description**: Retrieves market statistics for a specified trading pair over a custom time period. The function calculates OHLC (Open, High, Low, Close) prices, trading volume, and deal amount by aggregating individual trades over the requested period.
+- If the current time is 14:30:00 and Interval input is 86400:
+  - gives data from yesterday 14:30:00 to today 14:30:00
 - **返回數據結構**:
   - 最新價格
   - 24小時變化
@@ -163,25 +166,25 @@ graph TD
 - **功能**: 獲取市場最新成交
 - **返回數據結構**:
 
-    ```json
-    "result": [
-        {
-            "id": 3,
-            "time": 1736491908.160192, // 成交時間
-            "price": "20",             // 成交價格
-            "amount": "0.05",          // 成交數量
-            "type": "buy"              // 買賣方向
-        },
-        {
-            "id": 2,
-            "time": 1736491901.487354,
-            "price": "20",
-            "amount": "0.05",
-            "type": "buy"
-        },
-        //...
-    ]
-    ```
+      ```json
+      "result": [
+          {
+              "id": 3,
+              "time": 1736491908.160192, // 成交時間
+              "price": "20",             // 成交價格
+              "amount": "0.05",          // 成交數量
+              "type": "buy"              // 買賣方向
+          },
+          {
+              "id": 2,
+              "time": 1736491901.487354,
+              "price": "20",
+              "amount": "0.05",
+              "type": "buy"
+          },
+          //...
+      ]
+      ```
 
     ```mermaid
     sequenceDiagram
@@ -206,16 +209,20 @@ graph TD
 
 ### 5. 今日市場統計 (CMD_MARKET_STATUS_TODAY)
 
-- **功能**: 獲取今日市場統計數據
+- **功能**: 獲取今日市場的統計數據
+- **Function Description**: Provides market statistics specifically for the current trading day, combining calendar-day OHLC data with 24-hour rolling volume statistics
+  - If the current time is 14:30:00:
+    - OHLC(Open, High, Low, Close) data from today 00:00:00 to now
+    - Volume/deal data from yesterday 14:30:00 to today 14:30:00
 - **返回數據**:
 
     ```json
-    "result": {
+    "result":{
       "open": "0",   // 開盤價
       "last": "100", // 最新價
       "high": "200", // 最高價
       "low": "0",    // 最低價
-      "volume": "3", // 成交量
+      "volume ": "3", // 成交量
       "deal": "500"  // 成交額
     }
     ```
@@ -274,17 +281,19 @@ graph TD
     struct market_info {
         char   *name;          // 市場名稱
         mpd_t  *last;          // 最新價格
-        dict_t *sec;           // 秒級數據
-        dict_t *min;           // 分鐘級數據
-        dict_t *hour;          // 小時級數據
-        dict_t *day;           // 日級數據
-        dict_t *update;        // 更新標記
+        dict_t *sec;           // 秒級數據 (key: timestamp, value: kline_info)
+        dict_t *min;           // 分鐘級數據 (key: timestamp, value: kline_info)
+        dict_t *hour;          // 小時級數據 (key: timestamp, value: kline_info)
+        dict_t *day;           // 日級數據 (key: timestamp, value: kline_info)
+        dict_t *update;        // 更新標記 (key: update_key, value: NULL)
         list_t *deals;         // 最新成交 string 格式 (主要用於將數據持久化到 Redis)
         list_t *deals_json;    // 最新成交 json (用於快速響應 API 請求)
         double update_time;    // 更新時間
     };
     ```
-
+   - dict_market
+     - Key: market (sds)
+     - Value: market_info (market_info)
    - dict_t
      - K線數據字典 (sec/min/hour/day)
        - Key: time_t (時間戳)

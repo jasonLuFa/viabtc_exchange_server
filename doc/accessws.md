@@ -125,7 +125,7 @@ sequenceDiagram
     %% Kafka Balance Topic 處理流程
     K->>A: Balance Message
     
-    rect rgb(200, 230, 200)
+    rect rgb(38, 93, 38)
         Note over A: 檢查是否有訂閱該資產
         A->>A: 創建 state_entry<br/>保存 user_id 和 asset
         A->>ME: CMD_BALANCE_QUERY
@@ -139,13 +139,13 @@ sequenceDiagram
     %% Kafka Order Topic 處理流程
     K->>A: Order Message( BTCUSDT )
     
-    rect rgb(24, 210, 200)
+    rect rgb(38, 93, 38)
         Note over A: 檢查是否有訂閱該市場
         A->>C: send_notify("order.update", params)
         Note over C: 通知客戶端訂單狀態變化
     end
     
-    rect rgb(200, 230, 200)
+    rect rgb(38, 93, 38)
         Note over A: 檢查是否有訂閱該資產
         A->>A: 創建 state_entry<br/>保存 user_id 和 asset
         A->>ME: CMD_BALANCE_QUERY
@@ -156,7 +156,7 @@ sequenceDiagram
         Note over C: 通知 "基準貨幣" (BTC) 餘額
     end
     
-    rect rgb(200, 230, 200)
+    rect rgb(38, 93, 38)
         Note over A: 檢查是否有訂閱該資產
         A->>A: 創建 state_entry<br/>保存 user_id 和 asset
         A->>ME: CMD_BALANCE_QUERY
